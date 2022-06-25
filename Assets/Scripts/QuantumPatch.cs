@@ -9,10 +9,10 @@ public class QuantumPatch:Patch
     public QuantumPatch():base(new Vector2[] { Vector2.zero})
     {
         state = new QuantumState();
-        SetEdgeGate(Vector2.zero, Direction.Right, new QEdgeProperty("X",false));
-        SetEdgeGate(Vector2.zero, Direction.Left, new QEdgeProperty("X",false));
-        SetEdgeGate(Vector2.zero, Direction.Up, new QEdgeProperty("Z",false));
-        SetEdgeGate(Vector2.zero, Direction.Down, new QEdgeProperty("Z",false));
+        SetEdgeGate(Vector2.zero, Direction.Right, new QuantumEdgeProperty("X",false));
+        SetEdgeGate(Vector2.zero, Direction.Left, new QuantumEdgeProperty("X",false));
+        SetEdgeGate(Vector2.zero, Direction.Up, new QuantumEdgeProperty("Z",false));
+        SetEdgeGate(Vector2.zero, Direction.Down, new QuantumEdgeProperty("Z",false));
 
     }
 
@@ -22,10 +22,10 @@ public class QuantumPatch:Patch
         this.state = state;
     }
 
-    public bool SetEdgeGate(Vector2 coords, Direction direction, QEdgeProperty property)
+    public bool SetEdgeGate(Vector2 coords, Direction direction, QuantumEdgeProperty property)
     {
         var tmp = this.cellMap[Vector2Int.FloorToInt(coords)].edges[(int)direction].property;
-        if(tmp == null || tmp is QEdgeProperty qeprop && !qeprop.oqqupied) {
+        if(tmp == null || tmp is QuantumEdgeProperty qeprop && !qeprop.oqqupied) {
             tmp = property;
             return true;
         }

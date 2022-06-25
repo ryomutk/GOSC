@@ -2,20 +2,18 @@
 using System.Collections.ObjectModel;
 using UnityEngine;
 
-
-public class QEdgeProperty:EdgeProperty
+public class QuantumEdgeProperty:EdgeProperty
 {
 	public string operatorName;
 	public Edge[] members;
-	public bool oqqupied;
 	public int length { get { return members.Length; } }
 
-	public QEdgeProperty()
+	public QuantumEdgeProperty()
 	{
 		
 	}
 
-	public QEdgeProperty(string gate,bool oqqupied)
+	public QuantumEdgeProperty(string gate,bool oqqupied)
 	{
 		this.operatorName = gate;
 		this.oqqupied = oqqupied;

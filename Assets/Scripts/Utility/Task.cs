@@ -3,25 +3,59 @@ using System;
 public class Task
 {
     //すべて手動。resultは必要な場合のみ使う。
-    public int intervalCount{get;set;}
-    public bool compleate{get {return compleateGetter();}}
-    public object result{get{return resultGetter();}}
+    public int intervalCount { get; set; }
+    public bool compleate { get { return compleateGetter(); } }
+    public object result { get { return resultGetter(); } }
 
     Func<bool> compleateGetter;
     Func<object> resultGetter;
-    public bool hasResult{get;private set;}
+
+    //getterが設定されてないときのみ使われる
+    bool _compleateFlag = false;
+
+    //use only when resultGetter is not set
+    object _result = false;
+
 
     public static Task NULL_TASK = new Task(() => true);
+    
 
-    public Task(Func<bool> compleateGetter,Func<object> resultGetter = null)
+    /// <summary>
+    /// do nothing if compleateGetter is set
+    /// </summary>
+    public void SetCompleate()
     {
-        this.compleateGetter = compleateGetter;
-        if(resultGetter != null)
+        _compleateFlag = true;    
+    }
+
+    /// <summary>
+    /// do nothing if resultGetter is set
+    /// </summary>
+    /// <param name="result"></param>
+    public void SetResult(object result)
+    {
+
+    }
+
+    public Task(Func<bool> compleateGetter = null, Func<object> resultGetter = null)
+    {
+        if (compleateGetter != null)
         {
-            hasResult = true;
+            this.compleateGetter = compleateGetter;
+        }
+        else
+        {
+            this.compleateGetter = () => _compleateFlag;
+        }
+
+        if (resultGetter != null)
+        {
             this.resultGetter = resultGetter;
         }
-        hasResult = false;
+        else
+        {
+            this.resultGetter = () => _result;
+        }
     }
 
 }

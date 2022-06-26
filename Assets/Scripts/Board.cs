@@ -6,14 +6,16 @@ using System.Linq;
 public class Board
 {
     Cell[,] board;
-    List<Patch> patches;
-    Vector2Int extent;                                                                                                                                           
+    Dictionary<Patch,Vector2Int> _patchMap;
+    Vector2Int _extent;                                                                                                                                           
+    public Vector2Int extent{get{return _extent;}}
+    public Dictionary<Patch,Vector2Int> patchMap{get{return _patchMap;}}
 
     public Board(Vector2 extent)
     {
 
-        this.extent = Vector2Int.FloorToInt(extent);
-        board = new Cell[this.extent.x, this.extent.y];
+        this._extent = Vector2Int.FloorToInt(extent);
+        board = new Cell[this._extent.x, this._extent.y];
     }
 
 
@@ -21,7 +23,7 @@ public class Board
     public Patch Get(Vector2 coordinate)
     {
         var cell = GetCell(coordinate);
-        return patches.Find(x => x.cellMap.Values.Contains(cell));
+        return _patchMap.First(x => x.Key.cellMap.Values.Any(x => x ==cell)).Key;
     }
 
     public Cell GetCell(Vector2 coordinate)

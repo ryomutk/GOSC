@@ -1,13 +1,20 @@
 using UnityEngine;
 using System.Collections;
 using System;
+using Sirenix.OdinInspector;
 
 public class BoardManager : Singleton<BoardManager>
 {
-    public Board nowBoard { get; private set; }
+    [ShowInInspector,ReadOnly] public Board nowBoard { get; private set; }
     public Patch prepairedPatch { get; private set; }
-    public SessionState state = SessionState.disabled;
+    public SessionState state{get;private set;}
+    [SerializeField] BoardGUI board;
 
+    private void Start()
+    {
+        state = SessionState.disabled;
+        StartCoroutine(SessionLoop());
+    }
 
     /// <summary>
     /// make new board。
@@ -18,14 +25,16 @@ public class BoardManager : Singleton<BoardManager>
     {
         state = SessionState.prepairing;
         var boardPrepare = UIRouter.instance.RequestInput(InputRequests.newBoard);
-        
+
         StartCoroutine(WaitForBoardPrepare(boardPrepare));
     }
 
     IEnumerator WaitForBoardPrepare(Task boardPrepareTask)
-    {
+    {        
         yield return new WaitUntil(() => boardPrepareTask.compleate);
+
         nowBoard = boardPrepareTask.result as Board;
+        board.RedrawBoard();
 
         state = SessionState.actionSelect;
     }
@@ -78,7 +87,25 @@ public class BoardManager : Singleton<BoardManager>
         state = SessionState.patchPlace;
 
         var patchPlace = UIRouter.instance.RequestInput(InputRequests.patchPlace);
-        yield return new WaitUntil(() => patchPlace.compleate);
+        var count = 0;
+        while (!patchPlace.compleate)
+        {
+            yield return new WaitWhile(() => patchPlace.intervalCount == count);
+
+            if (patchPlace.compleate)
+            {
+                break;
+            }
+
+            #if DEBUG
+            Debug.Log("Patch Place Updated:"+ (Vector2)patchPlace.result);
+            #endif
+
+            count = patchPlace.intervalCount;
+            var nowCoord = (Vector2)patchPlace.result;
+            board.DrawPatchGhost(BoardManager.instance.prepairedPatch, Vector2Int.RoundToInt(nowCoord));
+        }
+        board.RemapPatch();
         state = SessionState.actionSelect;
     }
 

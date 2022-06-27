@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System;
 using System.Linq;
+using Sirenix.OdinInspector;
+using UnityEditor;
 
+[Serializable]
 public class Board
 {
-    Cell[,] board;
-    Dictionary<Patch,Vector2Int> _patchMap;
+    [ShowInInspector,TableMatrix(DrawElementMethod ="Read Only Matrix"),ReadOnly] Cell[,] board;
+    Dictionary<Patch,Vector2Int> _patchMap = new Dictionary<Patch, Vector2Int>();
     Vector2Int _extent;                                                                                                                                           
     public Vector2Int extent{get{return _extent;}}
     public Dictionary<Patch,Vector2Int> patchMap{get{return _patchMap;}}
@@ -55,6 +58,8 @@ public class Board
         var origin = Vector2Int.FloorToInt(coordinate);
         if (!Check(coordinate, patch))
         {
+            _patchMap[patch] = Vector2Int.RoundToInt(coordinate);
+
             foreach (var item in patch.cellMap)
             {
                 var local = Vector2Int.FloorToInt(item.Key);

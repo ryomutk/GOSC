@@ -6,7 +6,7 @@ public class HomePanel:InputRequestHandlerComponent
 {
     [SerializeField] Button patchSelectButton;
     [SerializeField] Button newBoardButton;
-    List<Task> waitingTasks;
+    List<Task> waitingTasks = new List<Task>();
 
     void Start()
     {
@@ -26,6 +26,9 @@ public class HomePanel:InputRequestHandlerComponent
     {
         foreach(var task in waitingTasks)
         {
+            #if DEBUG
+            Debug.Log(boardAction + " selected");
+            #endif
             task.SetResult(boardAction);
             task.SetCompleate();
         }

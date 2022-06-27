@@ -1,5 +1,5 @@
 using System;
-
+[Serializable]
 public class Task
 {
     //すべて手動。resultは必要な場合のみ使う。
@@ -34,7 +34,7 @@ public class Task
     /// <param name="result"></param>
     public void SetResult(object result)
     {
-
+        _result = result;
     }
 
     public Task(Func<bool> compleateGetter = null, Func<object> resultGetter = null)

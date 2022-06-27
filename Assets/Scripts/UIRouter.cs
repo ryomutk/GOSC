@@ -7,7 +7,7 @@ using System.Linq;
 public class UIRouter : Singleton<UIRouter>
 {
     [SerializeField] SerializableDictionary<InputRequests, InputRequestHandlerComponent> inputHandlers;
-    Dictionary<InputRequests, Task> inputTasks = new Dictionary<InputRequests, Task>();
+    [ShowInInspector]Dictionary<InputRequests, Task> waitingTasks = new Dictionary<InputRequests, Task>();
 
     /// <summary>
     /// input を Requestし、タスクを受け取る
@@ -18,14 +18,20 @@ public class UIRouter : Singleton<UIRouter>
     public Task RequestInput(InputRequests requestName)
     {
         InputRequestHandler selectedInput = inputHandlers[requestName];
+        var task = selectedInput.RequestInput();
+        waitingTasks[requestName] = task;
+        return task;
+    }
 
-        return selectedInput.RequestInput();
+    void Update()
+    {
+        UpdateInput();
     }
 
     List<InputRequests> removeTasks = new List<InputRequests>();
     void UpdateInput()
     {
-        foreach (var reqtask in inputTasks)
+        foreach (var reqtask in waitingTasks)
         {
             if (reqtask.Value.intervalCount > 0)
             {
@@ -39,7 +45,7 @@ public class UIRouter : Singleton<UIRouter>
 
         foreach (var task in removeTasks)
         {
-            inputTasks.Remove(task);
+            waitingTasks.Remove(task);
         }
     }
 
@@ -55,7 +61,7 @@ public class UIRouter : Singleton<UIRouter>
     /// <returns>inputResult,null if </returns>
     public object GetInput(InputRequests request)
     {
-        if (inputTasks.TryGetValue(request, out Task task))
+        if (waitingTasks.TryGetValue(request, out Task task))
         {
             if (task.compleate)
             {
@@ -67,7 +73,7 @@ public class UIRouter : Singleton<UIRouter>
             }
         }
 
-        inputTasks[request] = RequestInput(request);
+        waitingTasks[request] = RequestInput(request);
 
         return null;
     }

@@ -49,8 +49,8 @@ public class PatchPlacer : InputRequestHandlerComponent
     void MoveInput()
     {
 
-        var x = Input.GetAxisRaw("Horizontal");
-        var y = Input.GetAxisRaw("Vertical");
+        var x = Input.GetKeyDown(KeyCode.RightArrow)?1:Input.GetKeyDown(KeyCode.LeftArrow)?-1:0;
+        var y = Input.GetKeyDown(KeyCode.UpArrow)?1:Input.GetKeyDown(KeyCode.DownArrow)?-1:0;
         
         #if DEBUG
         Debug.Log("arrow input x:"+x+" y:" + y);

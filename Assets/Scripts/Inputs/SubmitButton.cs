@@ -6,7 +6,7 @@ public class SubmitButton : Singleton<SubmitButton>
 {
     public Button entity { get; private set; }
     public TMPro.TMP_Text text { get; set; }
-
+    
     protected override void Awake()
     {
         base.Awake();

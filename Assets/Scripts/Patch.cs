@@ -7,6 +7,7 @@ using System;
 public class Patch
 {
     int _numQubit = 1;
+    
     Dictionary<Vector2, Cell> _cellMap = new Dictionary<Vector2, Cell>();
     public ReadOnlyDictionary<Vector2, Cell> cellMap { get; }
     public ReadOnlyDictionary<Cell, AbstractShape> cellShapes;

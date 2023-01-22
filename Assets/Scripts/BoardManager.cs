@@ -1,7 +1,7 @@
-using UnityEngine;
 using System.Collections;
 using System;
 using Sirenix.OdinInspector;
+using UnityEngine;
 
 public class BoardManager : Singleton<BoardManager>
 {

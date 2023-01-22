@@ -13,7 +13,6 @@ public class QuantumPatch:Patch
         SetEdgeGate(Vector2.zero, Direction.Left, new QuantumEdgeProperty("X",false));
         SetEdgeGate(Vector2.zero, Direction.Up, new QuantumEdgeProperty("Z",false));
         SetEdgeGate(Vector2.zero, Direction.Down, new QuantumEdgeProperty("Z",false));
-
     }
 
     public QuantumPatch(Vector2[] coordinates,int numQubit,QuantumState state):base(coordinates)

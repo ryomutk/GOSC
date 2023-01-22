@@ -13,10 +13,10 @@ public class Board
     Vector2Int _extent;                                                                                                                                           
     public Vector2Int extent{get{return _extent;}}
     public Dictionary<Patch,Vector2Int> patchMap{get{return _patchMap;}}
-
+    
+    
     public Board(Vector2 extent)
     {
-
         this._extent = Vector2Int.FloorToInt(extent);
         board = new Cell[this._extent.x, this._extent.y];
     }

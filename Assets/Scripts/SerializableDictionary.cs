@@ -25,7 +25,7 @@ public class SerializableDictionary<K, V>
     {
         get
         {
-            if (!keyValuePairs.Any( x => x.key.Equals(key)))
+            if (!keyValuePairs.Any(x => x.key.Equals(key)))
             {
                 throw new KeyNotFoundException();
             }
@@ -42,20 +42,25 @@ public class SerializableDictionary<K, V>
             {
                 _keys.Add(key);
                 _values.Add(value);
-                keyValuePairs.Add(new SerializableKeyValuePair() {key = key,value = value });
+                keyValuePairs.Add(new SerializableKeyValuePair() { key = key, value = value });
             }
         }
     }
-    
-    public IEnumerator<KeyValuePair<K,V>> GetEnumerator()
-    {
-        Dictionary<K,V> tmp = new Dictionary<K, V>();
 
-        foreach(var kvp in keyValuePairs)
+    public IEnumerator<KeyValuePair<K, V>> GetEnumerator()
+    {
+        Dictionary<K, V> tmp = GetDictionary();
+        return tmp.GetEnumerator();
+    }
+
+    public Dictionary<K, V> GetDictionary()
+    {
+        Dictionary<K, V> tmp = new Dictionary<K, V>();
+        foreach (var kvp in keyValuePairs)
         {
             tmp[kvp.key] = kvp.value;
         }
 
-        return tmp.GetEnumerator();
-    } 
+        return tmp;
+    }
 }

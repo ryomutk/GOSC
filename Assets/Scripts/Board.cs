@@ -32,7 +32,14 @@ public class Board
     public Cell GetCell(Vector2 coordinate)
     {
         var cords = Vector2Int.FloorToInt(coordinate);
-        return board[cords.x, cords.y];
+        try
+        {
+            return board[cords.x, cords.y];
+        }
+        catch(IndexOutOfRangeException)
+        {
+            return null;
+        }
     }
 
     public bool Check(Vector2 coordinate)

@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Sirenix.OdinInspector;
 
+/// <summary>
+/// タイルのSpriteを保持しているScriptableObject（Tile(Unity Engine)）
+/// </summary>
 [CreateAssetMenu(menuName = "Tile/Patchtile")]
 public class PatchCellTile : Tile
 {

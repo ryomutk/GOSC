@@ -5,7 +5,8 @@ using TMPro;
 
 public class BoardCreator:InputRequestHandlerComponent
 {
-    [SerializeField] TMP_InputField inputField;
+    [SerializeField] TMP_Dropdown x_input;
+    [SerializeField] TMP_Dropdown y_input;
     List<Task> waitingTasks = new List<Task>();
 
     void Start()
@@ -23,8 +24,7 @@ public class BoardCreator:InputRequestHandlerComponent
 
     void ButtonPush()
     {
-        var txt = inputField.text.Split();
-        Vector2 extent = new Vector2(int.Parse(txt[0]),int.Parse(txt[1]));
+        Vector2 extent = new Vector2(int.Parse(x_input.options[x_input.value].text),int.Parse(y_input.options[y_input.value].text));
         Debug.Log(extent);
         var board = new Board(extent);
 

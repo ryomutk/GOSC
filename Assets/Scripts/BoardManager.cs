@@ -6,7 +6,7 @@ using UnityEngine;
 public class BoardManager : Singleton<BoardManager>
 {
     [ShowInInspector,ReadOnly] public Board nowBoard { get; private set; }
-    public Patch prepairedPatch { get; private set; }
+    public QuantumPatch prepairedPatch { get; private set; }
     public SessionState state{get;private set;}
     [SerializeField] BoardGUI board;
 
@@ -24,7 +24,7 @@ public class BoardManager : Singleton<BoardManager>
     void RequestNewBoard()
     {
         state = SessionState.prepairing;
-        var boardPrepare = UIRouter.instance.RequestInput(InputRequests.newBoard);
+        var boardPrepare = InputRouter.instance.RequestInput(InputRequests.newBoard);
 
         StartCoroutine(WaitForBoardPrepare(boardPrepare));
     }
@@ -35,7 +35,9 @@ public class BoardManager : Singleton<BoardManager>
 
         nowBoard = boardPrepareTask.result as Board;
         board.RedrawBoard();
+        var out_Task = OutputRouter.instance.RequestOutput(OutputRequests.info,new String[1]{"Waiting for Action"});
 
+        yield return new WaitUntil(()=>out_Task.compleate);
         state = SessionState.actionSelect;
     }
 
@@ -50,7 +52,7 @@ public class BoardManager : Singleton<BoardManager>
         {
             yield return new WaitUntil(() => state == SessionState.actionSelect);
 
-            var actionSelect = UIRouter.instance.RequestInput(InputRequests.actionSelect);
+            var actionSelect = InputRouter.instance.RequestInput(InputRequests.actionSelect);
 
             yield return new WaitUntil(() => actionSelect.compleate);
 
@@ -74,8 +76,8 @@ public class BoardManager : Singleton<BoardManager>
     IEnumerator PlaceLoop()
     {
         state = SessionState.patchInput;
-        var patchRequest = UIRouter.instance.RequestInput(InputRequests.patch);
-        yield return new WaitUntil(() => patchRequest.compleate);
+        var patchRequest = InputRouter.instance.RequestInput(InputRequests.patch);
+        yield return new WaitUntil(predicate: () => patchRequest.compleate);
 
         if (patchRequest.result == null)
         {
@@ -83,10 +85,10 @@ public class BoardManager : Singleton<BoardManager>
             yield break;
         }
 
-        prepairedPatch = patchRequest.result as Patch;
+        prepairedPatch = patchRequest.result as QuantumPatch;
         state = SessionState.patchPlace;
 
-        var patchPlace = UIRouter.instance.RequestInput(InputRequests.patchPlace);
+        var patchPlace = InputRouter.instance.RequestInput(InputRequests.patchPlace);
         var count = 0;
         while (!patchPlace.compleate)
         {

@@ -4,7 +4,7 @@ using Sirenix.OdinInspector;
 using System.Collections.Generic;
 using System.Linq;
 
-public class UIRouter : Singleton<UIRouter>
+public class InputRouter : Singleton<InputRouter>
 {
     [SerializeField] SerializableDictionary<InputRequests, InputRequestHandlerComponent> inputHandlers;
     [ShowInInspector]Dictionary<InputRequests, Task> waitingTasks = new Dictionary<InputRequests, Task>();

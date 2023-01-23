@@ -2,15 +2,22 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Tilemaps;
 using Sirenix.OdinInspector;
+using System;
 
 public class BoardGUI : MonoBehaviour
 {
+    Grid grid;
     [SerializeField] Tilemap board;
     [SerializeField] Tile boardGrid;
 
     [SerializeField] bool autoUpdate = true;
     //extent.x = pretty extent の時を基準にスケーリングする
     [SerializeField] int prettyExtent = 7;
+
+    private void Awake()
+    {
+        grid = GetComponentInChildren<Grid>();
+    }
 
 
     /// <summary>
@@ -51,15 +58,60 @@ public class BoardGUI : MonoBehaviour
         return Task.NULL_TASK;
     }
 
-    Task DrawPatch(Patch patch, Vector2Int coordinate,int depth = 1)
+    /// <summary>
+    /// マウスのポジションをタイルパッチ上の座標に変換して取得
+    /// </summary>
+    /// <returns></returns>
+    public Vector3Int GetMouseCoord()
+    {
+        Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        mousePos -= board.transform.position;
+        var cellPos = grid.WorldToCell(mousePos);
+
+        return cellPos;
+    }
+
+    Task DrawPatch(Patch patch, Vector2Int coordinate, int depth = 1)
     {
         PatchTile patchTile = new PatchTile(patch);
-        
-        foreach(var cordPatch in patchTile.patchCellMap)
+
+        foreach (var cordPatch in patchTile.patchCellMap)
         {
             Vector3Int cord = (Vector3Int)(coordinate + cordPatch.Key);
             cord.z = depth;
-            board.SetTile(cord,cordPatch.Value);
+            board.SetTile(cord, cordPatch.Value);
+        }
+
+        return Task.NULL_TASK;
+    }
+
+    Task RemapEdge()
+    {
+        for (int x = 0; x < BoardManager.instance.nowBoard.extent.x; x++)
+        {
+            for (int y = 0; y < BoardManager.instance.nowBoard.extent.y; y++)
+            {
+                var cord = new Vector3(x, y, 0);
+                var cell = BoardManager.instance.nowBoard.GetCell(cord);
+
+                if (cell == null)
+                {
+                    continue;
+                }
+
+                var depth = 4;
+                foreach (int direction in Enum.GetValues(typeof(Direction)))
+                {
+                    cord.z = depth;
+                    var property = cell.edges[direction].property as QuantumEdgeProperty;
+                    if (property.operatorName == "X")
+                    {
+                        var edgeTile = EdgeTile.GetTile((Direction)direction);
+                        board.SetTile(Vector3Int.FloorToInt(cord), edgeTile);
+                    }
+                    depth++;
+                }
+            }
         }
 
         return Task.NULL_TASK;
@@ -72,6 +124,7 @@ public class BoardGUI : MonoBehaviour
         {
             DrawPatch(patchVec.Key, patchVec.Value);
         }
+        RemapEdge();
 
         return Task.NULL_TASK;
     }
@@ -80,7 +133,7 @@ public class BoardGUI : MonoBehaviour
     {
         RemapPatch();
         //2がゴーストレイヤーであることを前提としている
-        DrawPatch(patch,coordinate,2);
+        DrawPatch(patch, coordinate, 2);
 
         return Task.NULL_TASK;
     }

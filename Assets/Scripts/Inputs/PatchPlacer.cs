@@ -53,7 +53,7 @@ public class PatchPlacer : InputRequestHandlerComponent
         var y = Input.GetKeyDown(KeyCode.UpArrow)?1:Input.GetKeyDown(KeyCode.DownArrow)?-1:0;
         
         #if DEBUG
-        Debug.Log("arrow input x:"+x+" y:" + y);
+        //Debug.Log("arrow input x:"+x+" y:" + y);
         #endif
 
         if ((x != 0 || y != 0) && !moved)

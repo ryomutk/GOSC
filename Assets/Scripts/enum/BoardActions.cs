@@ -3,5 +3,6 @@ public enum BoardActions
     none,
     startNew,
     placePatch,
-    extendPatch
+    extendPatch,
+    measurePatch
 }

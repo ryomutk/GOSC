@@ -4,5 +4,6 @@ public enum InputRequests
     patch,
     patchPlace,
     newBoard,
-    actionSelect
+    actionSelect,
+    selectMeasurePatch
 }

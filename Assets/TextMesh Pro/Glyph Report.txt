@@ -1,0 +1,20 @@
+Font:   Style: 
+Point Size: 0   SP/PD Ratio: Infinity
+
+Characters included: 0/7149
+Missing characters: 8
+Excluded characters: 0
+
+Characters missing from font file:
+----------------------------------------
+ID: 8239	Hex: 202F	Char [ ]
+ID: 8286	Hex: 205E	Char [⁞]
+ID: 8298	Hex: 206A	Char [⁪]
+ID: 8299	Hex: 206B	Char [⁫]
+ID: 8300	Hex: 206C	Char [⁬]
+ID: 8301	Hex: 206D	Char [⁭]
+ID: 8302	Hex: 206E	Char [⁮]
+ID: 8303	Hex: 206F	Char [⁯]
+
+Characters excluded from packing:
+----------------------------------------

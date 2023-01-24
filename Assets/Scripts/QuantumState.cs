@@ -1,20 +1,20 @@
 ﻿using UnityEngine;
 using System;
 using System.Numerics;
+using MathNet.Numerics.LinearAlgebra.Complex;
 
 public class QuantumState
 {
     //public Vector3 stateVector;
-    public Complex[] stateVector = new Complex[2];
+    public MathNet.Numerics.LinearAlgebra.Vector<Complex> stateVector;
     
-
-    public QuantumState()
+    public QuantumState(Pauli eigenBase)
     {
-        
+        this.stateVector = QuantumMath.GetAugVector(eigenBase).Row(1);    
     }
 
-    public QuantumState(Complex[] stateVector)
+    public QuantumState(DenseMatrix eigenBase)
     {
-        this.stateVector = stateVector;
+        this.stateVector = QuantumMath.GetAugVector(eigenBase).Row(1);
     }
 }

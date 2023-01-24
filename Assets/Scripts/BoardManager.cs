@@ -67,10 +67,38 @@ public class BoardManager : Singleton<BoardManager>
                     break;
                 case BoardActions.extendPatch:
                     throw new NotImplementedException();
+                case BoardActions.measurePatch:
+                    throw new NotImplementedException();
             }
 
         }
 
+    }
+    
+    IEnumerator MeasureLoop()
+    {
+        state = SessionState.patchInput;
+        var measureRequest = InputRouter.instance.RequestInput(InputRequests.selectMeasurePatch);
+
+        yield return new WaitUntil(()=>measureRequest.compleate);
+
+        var selecteds = measureRequest.result as QuantumPatch[];
+        if(selecteds.Length==1)
+        {
+            
+        }
+        else if(selecteds.Length == 2)
+        {
+
+        }
+        else if(selecteds.Length > 2)
+        {
+            throw new NotImplementedException();
+        }
+        else
+        {
+            
+        }
     }
 
     IEnumerator PlaceLoop()

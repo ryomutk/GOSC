@@ -19,18 +19,20 @@ public class BoardManager : Singleton<BoardManager>
     {
         baseSelectors[Pauli.X].onClick.AddListener(() =>
         {
-            baseSelectors[Pauli.Z].interactable = false;
-            baseSelectors[Pauli.X].interactable = true;
+            baseSelectors[Pauli.X].interactable = false;
+            baseSelectors[Pauli.Z].interactable = true;
             _pauliMode = Pauli.X;
+            board.RemapPatch();
         });
 
         baseSelectors[Pauli.X].interactable = false;
 
         baseSelectors[Pauli.Z].onClick.AddListener(() =>
         {
-            baseSelectors[Pauli.X].interactable = false;
-            baseSelectors[Pauli.Z].interactable = true;
+            baseSelectors[Pauli.Z].interactable = false;
+            baseSelectors[Pauli.X].interactable = true;
             _pauliMode = Pauli.Z;
+            board.RemapPatch();
         });
 
         state = SessionState.disabled;

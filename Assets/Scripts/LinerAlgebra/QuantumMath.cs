@@ -1,14 +1,15 @@
 using System.Collections.Generic;
-using MathNet.Numerics.LinearAlgebra.Complex32;
+using MathNet.Numerics.LinearAlgebra.Complex;
+using System.Numerics;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics;
 using System;
 
 public static class QuantumMath
 {
-    static DenseMatrix _pauliZ = DenseMatrix.OfArray(new Complex32[2, 2] { { 1, 0 }, { 0, -1 } });
-    static DenseMatrix _pauliX = DenseMatrix.OfArray(new Complex32[2, 2] { { 0, 1 }, { 1, 0 } });
-    static DenseMatrix _pauliY = DenseMatrix.OfArray(new Complex32[2, 2] { { 0, -Complex32.ImaginaryOne }, { Complex32.ImaginaryOne, 0 } });
+    static DenseMatrix _pauliZ = DenseMatrix.OfArray(new Complex[2, 2] { { 1, 0 }, { 0, -1 } });
+    static DenseMatrix _pauliX = DenseMatrix.OfArray(new Complex[2, 2] { { 0, 1 }, { 1, 0 } });
+    static DenseMatrix _pauliY = DenseMatrix.OfArray(new Complex[2, 2] { { 0, -Complex.ImaginaryOne }, { Complex.ImaginaryOne, 0 } });
     public static DenseMatrix pauliZ { get { return _pauliZ; } }
     public static DenseMatrix pauliX { get { return _pauliX; } }
     public static DenseMatrix pauliY { get { return _pauliY; } }
@@ -28,9 +29,9 @@ public static class QuantumMath
         return null;
     }
 
-    public static Dictionary<Complex32, MathNet.Numerics.LinearAlgebra.Vector<Complex32>> StateInBase(MathNet.Numerics.LinearAlgebra.Vector<Complex32> stateVector, DenseMatrix baseMatrix)
+    public static Dictionary<Complex, MathNet.Numerics.LinearAlgebra.Vector<Complex>> StateInBase(MathNet.Numerics.LinearAlgebra.Vector<Complex> stateVector, DenseMatrix baseMatrix)
     {
-        var result = new Dictionary<Complex32, MathNet.Numerics.LinearAlgebra.Vector<Complex32>>();
+        var result = new Dictionary<Complex, MathNet.Numerics.LinearAlgebra.Vector<Complex>>();
         var eigenvecs = GetAugVector(baseMatrix);
         var veca = eigenvecs.Row(0);
         var vecb = eigenvecs.Row(1);
@@ -45,25 +46,27 @@ public static class QuantumMath
         return result;
     }
 
-    static Complex32 GetProjectScolar(MathNet.Numerics.LinearAlgebra.Vector<Complex32> from, MathNet.Numerics.LinearAlgebra.Vector<Complex32> to)
+    static Complex GetProjectScolar(MathNet.Numerics.LinearAlgebra.Vector<Complex> from, MathNet.Numerics.LinearAlgebra.Vector<Complex> to)
     {
-        return from.DotProduct(to) / (Complex32)(from.SumMagnitudes() * from.SumMagnitudes());
+        var dp = from.DotProduct(to);
+        //"ベクトルの長さは常に1内積=射影の長さ"
+        return dp;
     }
 
-    public static Matrix<Complex32> GetAugVector(Complex32[,] baseArray)
+    public static Matrix<Complex> GetAugVector(Complex[,] baseArray)
     {
         var baseMatrix = DenseMatrix.OfArray(baseArray);
         var result = baseMatrix.Evd().EigenVectors;
         return result;
     }
-    public static Matrix<Complex32> GetAugVector(DenseMatrix baseMatrix)
+    public static Matrix<Complex> GetAugVector(DenseMatrix baseMatrix)
     {
         var result = baseMatrix.Evd().EigenVectors;
         return result;
     }
 
     [Sirenix.OdinInspector.Button]
-    public static Matrix<Complex32> GetAugVector(Pauli pauli)
+    public static Matrix<Complex> GetAugVector(Pauli pauli)
     {
         if (pauli == Pauli.X)
         {
@@ -83,8 +86,8 @@ public static class QuantumMath
 
     public static MeasurementResult Measure(QuantumPatch quantumPatch, DenseMatrix baseMatrix)
     {
-        Dictionary<Complex32, Vector<Complex32>> state = quantumPatch.StateInBase(baseMatrix);
-        Dictionary<Vector<Complex32>, double> rateDict = new Dictionary<MathNet.Numerics.LinearAlgebra.Vector<Complex32>, double>();
+        Dictionary<Complex, MathNet.Numerics.LinearAlgebra.Vector<Complex>> state = quantumPatch.StateInBase(baseMatrix);
+        Dictionary<MathNet.Numerics.LinearAlgebra.Vector<Complex>, double> rateDict = new Dictionary<MathNet.Numerics.LinearAlgebra.Vector<Complex>, double>();
         foreach (var headAndVector in state)
         {
             var p = headAndVector.Key.Magnitude * headAndVector.Key.Magnitude;
@@ -108,7 +111,7 @@ public static class QuantumMath
         throw new Exception("Deporlalized Error");
     }
 
-    public static string GetStateKet(MathNet.Numerics.LinearAlgebra.Vector<Complex32> stateVector, string def)
+    public static string GetStateKet(MathNet.Numerics.LinearAlgebra.Vector<Complex> stateVector, string def)
     {
         if (GetAugVector(Pauli.X).Row(0).Equals(stateVector))
         {

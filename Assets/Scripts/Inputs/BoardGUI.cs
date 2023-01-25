@@ -16,11 +16,13 @@ public class BoardGUI : MonoBehaviour
     [SerializeField] int hilightDepth = 20;
     [SerializeField] TMPro.TMP_Text labelText;
     TMPro.TMP_Text[,] texts;
+    RectTransform canvasTransform;
 
-    Board nowboard{get{return BoardManager.instance.nowBoard;}}
+    Board nowboard { get { return BoardManager.instance.nowBoard; } }
 
     private void Awake()
     {
+        canvasTransform = GetComponentInChildren<RectTransform>();
         grid = GetComponentInChildren<Grid>();
     }
 
@@ -33,7 +35,7 @@ public class BoardGUI : MonoBehaviour
     public Task RedrawBoard(Vector2Int? extent = null)
     {
         var defaultPosition = board.transform.position;
-
+        
         ClearBoard();
 
         if (extent == null)
@@ -41,8 +43,8 @@ public class BoardGUI : MonoBehaviour
             extent = BoardManager.instance.nowBoard.extent;
         }
 
-        texts = new TMPro.TMP_Text[extent.Value.x,extent.Value.y];
-        
+        texts = new TMPro.TMP_Text[extent.Value.x, extent.Value.y];
+
 
         var scale = Vector3.one * prettyExtent / extent.Value.x;
 
@@ -53,11 +55,22 @@ public class BoardGUI : MonoBehaviour
             for (int y = 0; y < extent.Value.y; y++)
             {
                 board.SetTile(new Vector3Int(x, y, 0), boardGrid);
-                var world_pos = board.CellToWorld(new Vector3Int(x,y));
-                var i = Instantiate(labelText);        
             }
         }
         board.transform.position = defaultPosition;
+
+        for (int x = 0; x < extent.Value.x; x++)
+        {
+            for (int y = 0; y < extent.Value.y; y++)
+            {
+                var world_pos = board.CellToWorld(new Vector3Int(x, y));
+
+                var i = Instantiate(labelText);
+                i.transform.SetParent(canvasTransform, false);
+                i.transform.position = (Vector2)(world_pos + boardGrid.sprite.bounds.extents * 8 / 5);
+                texts[x, y] = i;
+            }
+        }
         return Task.NULL_TASK;
     }
 
@@ -68,7 +81,7 @@ public class BoardGUI : MonoBehaviour
         {
             for (int y = 0; y < extent.y; y++)
             {
-                if(nowboard.selected[x,y])
+                if (nowboard.selected[x, y])
                 {
                     board.SetTile(new Vector3Int(x, y, hilightDepth), hilightGrid);
                 }
@@ -82,7 +95,20 @@ public class BoardGUI : MonoBehaviour
     Task ClearBoard()
     {
         board.ClearAllTiles();
+        DisposeTexts();
         return Task.NULL_TASK;
+    }
+
+    void DisposeTexts()
+    {
+        if (texts != null)
+        {
+            foreach (var tex in texts)
+            {
+                Destroy(tex);
+            }
+        }
+
     }
 
     /// <summary>
@@ -109,8 +135,8 @@ public class BoardGUI : MonoBehaviour
             board.SetTile(cord, cordPatch.Value);
         }
 
-        texts[coordinate.x,coordinate.y].text = (patch as QuantumPatch).getStateInfo(QuantumMath.GetPauliGate(BoardManager.instance.pauliMode));
-        
+        texts[coordinate.x, coordinate.y].text = (patch as QuantumPatch).getStateInfo(QuantumMath.GetPauliGate(BoardManager.instance.pauliMode));
+
         return Task.NULL_TASK;
     }
 

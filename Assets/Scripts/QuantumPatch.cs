@@ -4,15 +4,15 @@ using System.Collections.Generic;
 using System.Linq;
 using MathNet.Numerics;
 using MathNet.Numerics.LinearAlgebra;
-using MathNet.Numerics.LinearAlgebra.Complex32;
-
+using MathNet.Numerics.LinearAlgebra.Complex;
+using System.Numerics;
 
 public class QuantumPatch : Patch
 {
     int numQubit = 1;
     QuantumState state;
 
-    public QuantumPatch(UnityEngine.Vector2[] coords, Dictionary<UnityEngine.Vector2, Direction[]> smoothEdges, MathNet.Numerics.LinearAlgebra.Vector<Complex32> initialState) : base(coords)
+    public QuantumPatch(UnityEngine.Vector2[] coords, Dictionary<UnityEngine.Vector2, Direction[]> smoothEdges, MathNet.Numerics.LinearAlgebra.Vector<Complex> initialState) : base(coords)
     {
         var vecs = new UnityEngine.Vector2[4] { UnityEngine.Vector2.up, UnityEngine.Vector2.right, UnityEngine.Vector2.down, UnityEngine.Vector2.left };
         state = new QuantumState(initialState);
@@ -79,7 +79,7 @@ public class QuantumPatch : Patch
 
     public string GetInfo()
     {
-        var msg = "State:" + "[" + state.stateVector[0].Real + "+" + state.stateVector[0].Imaginary + "i" + "," + state.stateVector[1].Real + "+" + state.stateVector[1].Imaginary + "i" + "]" + "<br>" + "Size:" + cellMap.Count() + "<br>" + "Edges:" + "<br>";
+        string msg = "State:" + "[" + state.stateVector[0].Real + "+" + state.stateVector[0].Imaginary + "i" + "," + state.stateVector[1].Real + "+" + state.stateVector[1].Imaginary + "i" + "]" + "<br>" + "Size:" + cellMap.Count() + "<br>" + "Edges:" + "<br>";
         foreach (var cell in cellMap)
         {
             msg += "  " + cell.Key + ":<br>";
@@ -107,7 +107,7 @@ public class QuantumPatch : Patch
             }
             else
             {
-                msg += (cv.Key.Real != 0 ? (cv.Key.Real < 0 ? " + " : " ") + replaceF(cv.Key.Real) : " ") + (cv.Key.Imaginary != 0 ? " + " : " ") + (cv.Key.Imaginary != 0 ? replaceF(cv.Key.Imaginary) : "") + (cv.Key.Magnitude != 0 ? QuantumMath.GetStateKet(stateVector: cv.Value, "|a>") : "");
+                msg += (cv.Key.Real != 0 ? (cv.Key.Real > 0 ? " + " : " ") + replaceF(cv.Key.Real) : " ") + (cv.Key.Imaginary != 0?(cv.Key.Imaginary < 0 ? " + " : " ") +replaceF(cv.Key.Imaginary) : "") + (cv.Key.Magnitude != 0 ? QuantumMath.GetStateKet(stateVector: cv.Value, "|a>") : "");
             }
 
             count++;
@@ -115,10 +115,10 @@ public class QuantumPatch : Patch
         return msg;
     }
     static float root2bunnoichi = 0.707106781186547f;
-    string replaceF(float num)
+    string replaceF(double num)
     {
         var result = num.ToString();
-        if (Mathf.Abs(num) == root2bunnoichi)
+        if (Mathf.Abs((float)num) == root2bunnoichi)
         {
             result = "1/√2";
             if (num < 0)
@@ -130,7 +130,7 @@ public class QuantumPatch : Patch
         return result;
     }
 
-    public Dictionary<Complex32, Vector<Complex32>> StateInBase(DenseMatrix baseMatrix)
+    public Dictionary<Complex,MathNet.Numerics.LinearAlgebra.Vector<Complex>> StateInBase(DenseMatrix baseMatrix)
     {
         return QuantumMath.StateInBase(this.state.stateVector, baseMatrix);
     }

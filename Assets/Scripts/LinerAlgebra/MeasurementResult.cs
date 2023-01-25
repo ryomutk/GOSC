@@ -2,17 +2,18 @@
 using System.Collections.Generic;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics;
-using MathNet.Numerics.LinearAlgebra.Complex32;
+using System.Numerics;
+using MathNet.Numerics.LinearAlgebra.Complex;
 
 public class MeasurementResult
 {
-    Dictionary<Vector<Complex32>,double> rateDict = new Dictionary<Vector<Complex32>, double>();
+    Dictionary<MathNet.Numerics.LinearAlgebra.Vector<Complex>,double> rateDict = new Dictionary<MathNet.Numerics.LinearAlgebra.Vector<Complex>, double>();
     string measurementResult = "";
     string infoMsg = "";
-    Vector<Complex32> stateVector;
+    MathNet.Numerics.LinearAlgebra.Vector<Complex> stateVector;
     DenseMatrix measureBase;
 
-    public MeasurementResult(Dictionary<Vector<Complex32>,double> rates,Vector<Complex32> result,string ket,DenseMatrix baseMatrix)
+    public MeasurementResult(Dictionary<MathNet.Numerics.LinearAlgebra.Vector<Complex>,double> rates,MathNet.Numerics.LinearAlgebra.Vector<Complex> result,string ket,DenseMatrix baseMatrix)
     {
         this.rateDict = rates;
         this.measurementResult = ket;

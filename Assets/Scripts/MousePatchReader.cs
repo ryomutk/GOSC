@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 public class MousePatchReader : InputRequestHandlerComponent
 {
     BoardGUI boardGUI;
@@ -24,7 +25,6 @@ public class MousePatchReader : InputRequestHandlerComponent
 
     public override Task RequestInput()
     {
-        SubmitButton.instance.text.text = "Measure";
         processingTask = new Task();
 
         return processingTask;
@@ -59,7 +59,7 @@ public class MousePatchReader : InputRequestHandlerComponent
                 nowPatch = null;
             }
 
-            if (Input.GetMouseButtonDown(0))
+            if (processingTask!=null&&Input.GetMouseButtonDown(0))
             {
                 if (selecteds.ContainsKey(patch))
                 {
@@ -70,6 +70,7 @@ public class MousePatchReader : InputRequestHandlerComponent
                 {
                     selecteds[patch] = true;
                 }
+                processingTask.SetResult(selecteds);
             }
         }
     }

@@ -113,23 +113,28 @@ public static class QuantumMath
 
     public static string GetStateKet(MathNet.Numerics.LinearAlgebra.Vector<Complex> stateVector, string def)
     {
-        if (GetAugVector(Pauli.X).Row(0).Equals(stateVector))
+        if (GetAugVector(Pauli.Z).Row(0).Equals(stateVector))
         {
             return "|1>";
         }
-        else if (GetAugVector(Pauli.X).Row(1).Equals(stateVector))
+        else if (GetAugVector(Pauli.Z).Row(1).Equals(stateVector))
         {
             return "|0>";
         }
-        if (GetAugVector(Pauli.Z).Row(0).Equals(stateVector))
+        if (GetAugVector(Pauli.X).Row(0).Equals(stateVector))
         {
             return "|+>";
         }
-        else if (GetAugVector(Pauli.Z).Row(1).Equals(stateVector))
+        else if (GetAugVector(Pauli.X).Row(1).Equals(stateVector))
         {
             return "|->";
         }
 
         return def;
+    }
+
+    public static string ComplexToStr(Complex complex)
+    {
+        return complex.Real + complex.Imaginary == 0? (complex.Imaginary > 0 ? " + ":" ") + complex.Imaginary + "i":"";
     }
 }

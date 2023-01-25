@@ -14,7 +14,7 @@ public class Task
     bool _compleateFlag = false;
 
     //use only when resultGetter is not set
-    object _result = false;
+    object _result = null;
 
 
     public static Task NULL_TASK = new Task(() => true);

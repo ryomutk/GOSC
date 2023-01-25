@@ -74,16 +74,21 @@ public class BoardGUI : MonoBehaviour
         return Task.NULL_TASK;
     }
 
-    Task RemapSelected()
+    public Task RemapSelected()
     {
         var extent = BoardManager.instance.nowBoard.extent;
         for (int x = 0; x < extent.x; x++)
         {
             for (int y = 0; y < extent.y; y++)
             {
-                if (nowboard.selected[x, y])
+                var light =  board.GetTile(new Vector3Int(x,y,hilightDepth));
+                if (nowboard.selected[x, y] &&light ==null)
                 {
                     board.SetTile(new Vector3Int(x, y, hilightDepth), hilightGrid);
+                }
+                else if( light !=null && !nowboard.selected[x,y])
+                {
+                    board.SetTile(new Vector3Int(x, y, hilightDepth), null);
                 }
             }
         }

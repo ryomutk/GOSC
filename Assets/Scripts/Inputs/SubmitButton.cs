@@ -42,6 +42,14 @@ public class SubmitButton : Singleton<SubmitButton>
                 }
                 break;
 
+            case SessionState.patchMeasure:
+                if (text.text != "Measure")
+                {
+                    entity.interactable = true;
+                    text.text = "Measure";
+                }
+                break;
+
             case SessionState.patchPlace:
                 if (text.text != "Place")
                 {

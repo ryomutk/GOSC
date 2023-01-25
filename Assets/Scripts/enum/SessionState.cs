@@ -4,5 +4,6 @@
         prepairing,     //ボード準備中
         actionSelect,        //アクション選択待ち
         patchInput,     //パッチ入力待ち
-        patchPlace      //パッチ置き待ち
+        patchPlace,      //パッチ置き待ち
+        patchMeasure
     }

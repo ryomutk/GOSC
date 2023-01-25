@@ -106,22 +106,24 @@ public class BoardManager : Singleton<BoardManager>
 
         while (!measureRequest.compleate)
         {
+            yield return new WaitUntil(()=>measureRequest.result!=null);
+            
+            state = SessionState.patchMeasure;
             var last = measureRequest.result as Dictionary<QuantumPatch, bool>;
-            yield return null;
 
             foreach (var patchBool in last)
             {
                 nowBoard.PatchSelect(patchBool.Key, !patchBool.Value);
             }
+            board.RemapSelected();
         }
 
-        var selecteds = measureRequest.result as QuantumPatch[];
+        var selecteds =( measureRequest.result as Dictionary<QuantumPatch, bool>).Where(x => x.Value).Select(x=>x.Key).ToArray();
         if (selecteds.Length == 1)
         {
             Pauli selected = pauliMode;
-            yield return new WaitUntil(() => selected != Pauli.Y);
-            QuantumMath.Measure(selecteds[0], selected == Pauli.X ? QuantumMath.pauliX : QuantumMath.pauliZ);
-
+            var result = QuantumMath.Measure(selecteds[0], selected == Pauli.X ? QuantumMath.pauliX : QuantumMath.pauliZ);
+            OutputRouter.instance.RequestOutput(OutputRequests.info,result.infoMsg);
         }
         else if (selecteds.Length == 2)
         {
@@ -135,6 +137,8 @@ public class BoardManager : Singleton<BoardManager>
         {
 
         }
+
+        state = SessionState.actionSelect;
     }
 
     IEnumerator PlaceLoop()

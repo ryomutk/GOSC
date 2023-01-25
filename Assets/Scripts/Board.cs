@@ -4,21 +4,35 @@ using System;
 using System.Linq;
 using Sirenix.OdinInspector;
 using UnityEditor;
-
 [Serializable]
 public class Board
 {
-    [ShowInInspector,TableMatrix(DrawElementMethod ="Read Only Matrix"),ReadOnly] Cell[,] board;
-    Dictionary<Patch,Vector2Int> _patchMap = new Dictionary<Patch, Vector2Int>();
-    Vector2Int _extent;                                                                                                                                           
-    public Vector2Int extent{get{return _extent;}}
-    public Dictionary<Patch,Vector2Int> patchMap{get{return _patchMap;}}
-    
-    
+    [ShowInInspector, TableMatrix(DrawElementMethod = "Read Only Matrix"), ReadOnly] Cell[,] board;
+    Dictionary<Patch, Vector2Int> _patchMap = new Dictionary<Patch, Vector2Int>();
+    Vector2Int _extent;
+    public Vector2Int extent { get { return _extent; } }
+    public Dictionary<Patch, Vector2Int> patchMap { get { return _patchMap; } }
+    public bool[,] selected { get; private set; }
+
     public Board(Vector2 extent)
     {
         this._extent = Vector2Int.FloorToInt(extent);
         board = new Cell[this._extent.x, this._extent.y];
+        selected = new bool[this._extent.x, this._extent.y];
+    }
+
+    public void PatchSelect(Patch target, bool off = false)
+    {
+        var origin = patchMap[target];
+        foreach (Vector2 pos in target.cellMap.Keys)
+        {
+            selected[origin.x + (int)pos.x, origin.y+(int)pos.y] = !off;
+        }
+    }
+
+    public void DeselectAll()
+    {
+        selected = new bool[this._extent.x, this._extent.y];
     }
 
 
@@ -26,7 +40,7 @@ public class Board
     public Patch Get(Vector2 coordinate)
     {
         var cell = GetCell(coordinate);
-        return _patchMap.First(x => x.Key.cellMap.Values.Any(x => x ==cell)).Key;
+        return _patchMap.First(x => x.Key.cellMap.Values.Any(x => x == cell)).Key;
     }
 
     public Cell GetCell(Vector2 coordinate)
@@ -36,7 +50,7 @@ public class Board
         {
             return board[cords.x, cords.y];
         }
-        catch(IndexOutOfRangeException)
+        catch (IndexOutOfRangeException)
         {
             return null;
         }
@@ -47,11 +61,11 @@ public class Board
         return GetCell(coordinate) != null;
     }
 
-    public bool Check(Vector2 coordinate,Patch patch)
+    public bool Check(Vector2 coordinate, Patch patch)
     {
-        foreach(var coord in patch.cellMap.Keys)
+        foreach (var coord in patch.cellMap.Keys)
         {
-            if(!Check(coord + coordinate))
+            if (!Check(coord + coordinate))
             {
                 return false;
             }
@@ -60,7 +74,7 @@ public class Board
         return true;
     }
 
-    public bool Register(Vector2 coordinate,Patch patch)
+    public bool Register(Vector2 coordinate, Patch patch)
     {
         var origin = Vector2Int.FloorToInt(coordinate);
         if (!Check(coordinate, patch))

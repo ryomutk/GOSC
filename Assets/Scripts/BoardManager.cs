@@ -2,16 +2,37 @@ using System.Collections;
 using System;
 using Sirenix.OdinInspector;
 using UnityEngine;
-
+using UnityEngine.UI;
+using System.Linq;
+using System.Collections.Generic;
 public class BoardManager : Singleton<BoardManager>
 {
-    [ShowInInspector,ReadOnly] public Board nowBoard { get; private set; }
+    [ShowInInspector, ReadOnly] public Board nowBoard { get; private set; }
     public QuantumPatch prepairedPatch { get; private set; }
-    public SessionState state{get;private set;}
+    public SessionState state { get; private set; }
     [SerializeField] BoardGUI board;
+    [SerializeField] SerializableDictionary<Pauli, Button> baseSelectors;
+    Pauli _pauliMode = Pauli.X;
+    public Pauli pauliMode { get { return _pauliMode; } }
 
     private void Start()
     {
+        baseSelectors[Pauli.X].onClick.AddListener(() =>
+        {
+            baseSelectors[Pauli.Z].interactable = false;
+            baseSelectors[Pauli.X].interactable = true;
+            _pauliMode = Pauli.X;
+        });
+
+        baseSelectors[Pauli.X].interactable = false;
+
+        baseSelectors[Pauli.Z].onClick.AddListener(() =>
+        {
+            baseSelectors[Pauli.X].interactable = false;
+            baseSelectors[Pauli.Z].interactable = true;
+            _pauliMode = Pauli.Z;
+        });
+
         state = SessionState.disabled;
         StartCoroutine(SessionLoop());
     }
@@ -30,14 +51,14 @@ public class BoardManager : Singleton<BoardManager>
     }
 
     IEnumerator WaitForBoardPrepare(Task boardPrepareTask)
-    {        
+    {
         yield return new WaitUntil(() => boardPrepareTask.compleate);
 
         nowBoard = boardPrepareTask.result as Board;
         board.RedrawBoard();
-        var out_Task = OutputRouter.instance.RequestOutput(OutputRequests.info,new String[1]{"Waiting for Action"});
+        var out_Task = OutputRouter.instance.RequestOutput(OutputRequests.info, new String[1] { "Waiting for Action" });
 
-        yield return new WaitUntil(()=>out_Task.compleate);
+        yield return new WaitUntil(() => out_Task.compleate);
         state = SessionState.actionSelect;
     }
 
@@ -68,36 +89,49 @@ public class BoardManager : Singleton<BoardManager>
                 case BoardActions.extendPatch:
                     throw new NotImplementedException();
                 case BoardActions.measurePatch:
-                    throw new NotImplementedException();
+                    yield return StartCoroutine(MeasureLoop());
+                    break;
             }
 
         }
 
     }
-    
+
     IEnumerator MeasureLoop()
     {
         state = SessionState.patchInput;
         var measureRequest = InputRouter.instance.RequestInput(InputRequests.selectMeasurePatch);
 
-        yield return new WaitUntil(()=>measureRequest.compleate);
+        while (!measureRequest.compleate)
+        {
+            var last = measureRequest.result as Dictionary<QuantumPatch, bool>;
+            yield return null;
+
+            foreach (var patchBool in last)
+            {
+                nowBoard.PatchSelect(patchBool.Key, !patchBool.Value);
+            }
+        }
 
         var selecteds = measureRequest.result as QuantumPatch[];
-        if(selecteds.Length==1)
+        if (selecteds.Length == 1)
         {
-            
+            Pauli selected = pauliMode;
+            yield return new WaitUntil(() => selected != Pauli.Y);
+            QuantumMath.Measure(selecteds[0], selected == Pauli.X ? QuantumMath.pauliX : QuantumMath.pauliZ);
+
         }
-        else if(selecteds.Length == 2)
+        else if (selecteds.Length == 2)
         {
 
         }
-        else if(selecteds.Length > 2)
+        else if (selecteds.Length > 2)
         {
             throw new NotImplementedException();
         }
         else
         {
-            
+
         }
     }
 
@@ -127,9 +161,9 @@ public class BoardManager : Singleton<BoardManager>
                 break;
             }
 
-            #if DEBUG
-            Debug.Log("Patch Place Updated:"+ (Vector2)patchPlace.result);
-            #endif
+#if DEBUG
+            Debug.Log("Patch Place Updated:" + (Vector2)patchPlace.result);
+#endif
 
             count = patchPlace.intervalCount;
             var nowCoord = (Vector2)patchPlace.result;

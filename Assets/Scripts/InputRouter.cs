@@ -23,6 +23,11 @@ public class InputRouter : Singleton<InputRouter>
         return task;
     }
 
+    public void Register(InputRequestHandlerComponent handler,InputRequests request)
+    {
+        inputHandlers[request] = handler;
+    }
+
     void Update()
     {
         UpdateInput();

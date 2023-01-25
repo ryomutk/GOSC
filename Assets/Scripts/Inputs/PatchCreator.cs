@@ -6,34 +6,58 @@ public class PatchCreator : InputRequestHandlerComponent
 {
     [SerializeField] Vector2[] coords;
     [SerializeField] SerializableDictionary<Vector2, Direction[]> edges;
-    [SerializeField] Pauli initializeState;
+    [SerializeField] SerializableDictionary<Button,InitializeType> buttonDict;
+    CanvasGroup canvasGroup;
     Task workingTask = Task.NULL_TASK;
     QuantumPatch nowPatch = null;
-    DenseMatrix eigenBase;
 
     void Start()
     {
-        SubmitButton.instance.entity.onClick.AddListener(SubmitInput);
+        foreach(var buttonType in buttonDict)
+        {
+            buttonType.Key.onClick.AddListener(() => SubmitInput(buttonType.Value));
+        }
+        canvasGroup = GetComponent<CanvasGroup>();
+        canvasGroup.interactable = false;
+        canvasGroup.blocksRaycasts = false;
+        canvasGroup.alpha = 0;
+        InputRouter.instance.Register(this,InputRequests.patch);
     }
 
     public override Task RequestInput()
     {
+        canvasGroup.alpha = 1;
+        canvasGroup.interactable = true;
+        canvasGroup.blocksRaycasts = true;
         workingTask = new Task();
         return workingTask;
     }
+      
 
-    void SetPatch(Vector2[] coords, Dictionary<Vector2, Direction[]> smoothEdges)
-    {
-
-    }
-
-    void SubmitInput()
+    void SubmitInput(InitializeType arg)
     {
         if (!workingTask.compleate)
         {
-            eigenBase = initializeState == Pauli.X?QuantumMath.pauliX:QuantumMath.pauliY;
+            canvasGroup.alpha = 0;
+            canvasGroup.interactable = false;
+            canvasGroup.blocksRaycasts = false;
+            Pauli initialBase = 0;
+            if(arg == InitializeType.single0)
+            {
+                initialBase =  Pauli.Z;
+            }
+            else if(arg == InitializeType.singleP)
+            {
+                initialBase = Pauli.X;
+            }
+            else
+            {
+                workingTask.SetResult(null);
+                workingTask.SetCompleate();
+                return;
+            }
 
-            workingTask.SetResult(new QuantumPatch(coords, edges.GetDictionary(),eigenBase));
+            workingTask.SetResult(new QuantumPatch(coords, edges.GetDictionary(),initialBase));
             workingTask.SetCompleate();
         }
     }

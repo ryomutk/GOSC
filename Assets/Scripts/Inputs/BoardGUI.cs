@@ -9,10 +9,15 @@ public class BoardGUI : MonoBehaviour
     Grid grid;
     [SerializeField] Tilemap board;
     [SerializeField] Tile boardGrid;
-
+    [SerializeField] Tile hilightGrid;
     [SerializeField] bool autoUpdate = true;
     //extent.x = pretty extent の時を基準にスケーリングする
     [SerializeField] int prettyExtent = 7;
+    [SerializeField] int hilightDepth = 20;
+    [SerializeField] TMPro.TMP_Text labelText;
+    TMPro.TMP_Text[,] texts;
+
+    Board nowboard{get{return BoardManager.instance.nowBoard;}}
 
     private void Awake()
     {
@@ -35,6 +40,10 @@ public class BoardGUI : MonoBehaviour
         {
             extent = BoardManager.instance.nowBoard.extent;
         }
+
+        texts = new TMPro.TMP_Text[extent.Value.x,extent.Value.y];
+        
+
         var scale = Vector3.one * prettyExtent / extent.Value.x;
 
         transform.localScale = scale;
@@ -44,10 +53,28 @@ public class BoardGUI : MonoBehaviour
             for (int y = 0; y < extent.Value.y; y++)
             {
                 board.SetTile(new Vector3Int(x, y, 0), boardGrid);
+                var world_pos = board.CellToWorld(new Vector3Int(x,y));
+                var i = Instantiate(labelText);        
+            }
+        }
+        board.transform.position = defaultPosition;
+        return Task.NULL_TASK;
+    }
+
+    Task RemapSelected()
+    {
+        var extent = BoardManager.instance.nowBoard.extent;
+        for (int x = 0; x < extent.x; x++)
+        {
+            for (int y = 0; y < extent.y; y++)
+            {
+                if(nowboard.selected[x,y])
+                {
+                    board.SetTile(new Vector3Int(x, y, hilightDepth), hilightGrid);
+                }
             }
         }
 
-        board.transform.position = defaultPosition;
         return Task.NULL_TASK;
     }
 
@@ -82,6 +109,8 @@ public class BoardGUI : MonoBehaviour
             board.SetTile(cord, cordPatch.Value);
         }
 
+        texts[coordinate.x,coordinate.y].text = (patch as QuantumPatch).getStateInfo(QuantumMath.GetPauliGate(BoardManager.instance.pauliMode));
+        
         return Task.NULL_TASK;
     }
 
@@ -125,9 +154,12 @@ public class BoardGUI : MonoBehaviour
             DrawPatch(patchVec.Key, patchVec.Value);
         }
         RemapEdge();
+        RemapSelected();
 
         return Task.NULL_TASK;
     }
+
+
 
     public Task DrawPatchGhost(Patch patch, Vector2Int coordinate)
     {

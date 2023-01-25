@@ -19,10 +19,10 @@ public class SubmitButton : Singleton<SubmitButton>
         switch (BoardManager.instance.state)
         {
             case SessionState.prepairing:
-                if (text.text != "Create")
+                if (text.text != "Create <br> Board")
                 {
                     entity.interactable = true;
-                    text.text = "Create";
+                    text.text = "CreateBoard";
                 }
                 break;
             case SessionState.actionSelect:
@@ -35,10 +35,10 @@ public class SubmitButton : Singleton<SubmitButton>
                 break;
 
             case SessionState.patchInput:
-                if (text.text != "Generate")
+                if (text.text != "SelectPatch")
                 {
-                    entity.interactable = true;
-                    text.text = "Generate";
+                    entity.interactable = false;
+                    text.text = "SelectPatch";
                 }
                 break;
 
@@ -49,7 +49,6 @@ public class SubmitButton : Singleton<SubmitButton>
                     text.text = "Place";
                 }
                 break;
-
         }
     }
 }

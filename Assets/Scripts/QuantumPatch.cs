@@ -2,8 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
-using MathNet.Numerics.LinearAlgebra.Complex;
+using MathNet.Numerics;
+using MathNet.Numerics.LinearAlgebra;
+using MathNet.Numerics.LinearAlgebra.Complex32;
 
 
 public class QuantumPatch : Patch
@@ -11,10 +12,10 @@ public class QuantumPatch : Patch
     int numQubit = 1;
     QuantumState state;
 
-    public QuantumPatch(UnityEngine.Vector2[] coords, Dictionary<UnityEngine.Vector2, Direction[]> smoothEdges, DenseMatrix eigenBase) : base(coords)
+    public QuantumPatch(UnityEngine.Vector2[] coords, Dictionary<UnityEngine.Vector2, Direction[]> smoothEdges, MathNet.Numerics.LinearAlgebra.Vector<Complex32> initialState) : base(coords)
     {
         var vecs = new UnityEngine.Vector2[4] { UnityEngine.Vector2.up, UnityEngine.Vector2.right, UnityEngine.Vector2.down, UnityEngine.Vector2.left };
-        state = new QuantumState(eigenBase);
+        state = new QuantumState(initialState);
         foreach (var coordDirection in smoothEdges)
         {
             foreach (Direction direction in Enum.GetValues(typeof(Direction)))
@@ -93,8 +94,44 @@ public class QuantumPatch : Patch
         return msg;
     }
 
-    public Dictionary<Complex,MathNet.Numerics.LinearAlgebra.Vector<Complex>> StateInBase(DenseMatrix baseMatrix)
+    public string getStateInfo(DenseMatrix baseMatrix)
     {
-        return QuantumMath.StateInBase(this.state.stateVector,baseMatrix);
+        var result = StateInBase(baseMatrix);
+        var msg = "";
+        var count = 0;
+        foreach (var cv in result)
+        {
+            if (count == 0)
+            {
+                msg += (cv.Key.Real != 0 ? replaceF(cv.Key.Real) : "" + (cv.Key.Imaginary > 0 ? " + " : " ")) + (cv.Key.Imaginary != 0 ? replaceF(cv.Key.Imaginary) : "") + (cv.Key.Magnitude > 0 ? QuantumMath.GetStateKet(stateVector: cv.Value, "|a>") : "");
+            }
+            else
+            {
+                msg += (cv.Key.Real != 0 ? (cv.Key.Real < 0 ? " + " : " ") + replaceF(cv.Key.Real) : " ") + (cv.Key.Imaginary != 0 ? " + " : " ") + (cv.Key.Imaginary != 0 ? replaceF(cv.Key.Imaginary) : "") + (cv.Key.Magnitude != 0 ? QuantumMath.GetStateKet(stateVector: cv.Value, "|a>") : "");
+            }
+
+            count++;
+        }
+        return msg;
+    }
+    static float root2bunnoichi = 0.707106781186547f;
+    string replaceF(float num)
+    {
+        var result = num.ToString();
+        if (Mathf.Abs(num) == root2bunnoichi)
+        {
+            result = "1/√2";
+            if (num < 0)
+            {
+                result = "-" + result;
+            }
+        }
+
+        return result;
+    }
+
+    public Dictionary<Complex32, Vector<Complex32>> StateInBase(DenseMatrix baseMatrix)
+    {
+        return QuantumMath.StateInBase(this.state.stateVector, baseMatrix);
     }
 }

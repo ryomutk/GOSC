@@ -1,6 +1,6 @@
 using UnityEngine;
-
-public class MousePatchReader : MonoBehaviour
+using System.Collections.Generic;
+public class MousePatchReader : InputRequestHandlerComponent
 {
     BoardGUI boardGUI;
     Board nowBoard
@@ -9,11 +9,34 @@ public class MousePatchReader : MonoBehaviour
     }
     QuantumPatch nowPatch;
     TemporaryTextArgs nowText = null;
-    static float root2bunnoichi = 0.707106781186547f;
     bool onpatch = false;
+    Task processingTask = null;
+    Dictionary<QuantumPatch, bool> selecteds = new Dictionary<QuantumPatch, bool>();
+
+
+
     private void Start()
     {
         boardGUI = GetComponent<BoardGUI>();
+        InputRouter.instance.Register(this, InputRequests.selectMeasurePatch);
+        SubmitButton.instance.entity.onClick.AddListener(() => SubmitInput());
+    }
+
+    public override Task RequestInput()
+    {
+        SubmitButton.instance.text.text = "Measure";
+        processingTask = new Task();
+
+        return processingTask;
+    }
+
+    void SubmitInput()
+    {
+        if (processingTask != null)
+        {
+            processingTask.SetCompleate();
+            processingTask = null;
+        }
     }
 
     private void Update()
@@ -26,30 +49,30 @@ public class MousePatchReader : MonoBehaviour
             {
                 nowPatch = patch;
                 //OutputRouter.instance.RequestOutput(OutputRequests.info, patch.GetInfo());
-                var result = patch.StateInBase(QuantumMath.pauliZ);
-                var msg = "";
-                var count = 0;
-                foreach (var cv in result)
-                {
-                    if (count == 0)
-                    {
-                        msg += (cv.Key.Real != 0 ? cv.Key.Real+(cv.Key.Imaginary<0?" + ":" - "):"") + (cv.Key.Imaginary != 0?cv.Key.Imaginary+" + ":"" )+ (QuantumMath.GetStateKet(cv.Value, "|a〉"));
-                    }
-                    else
-                    {
-                        msg += (cv.Key.Real != 0 ? (cv.Key.Real < 0?" ":" + ")+ cv.Key.Real + (cv.Key.Imaginary<0?" + ":" - "):"") + (cv.Key.Imaginary != 0?cv.Key.Imaginary+" + ":"" )+ (QuantumMath.GetStateKet(cv.Value, "|a〉<sup>T</sup>"));
-                    }
+                var msg = patch.getStateInfo(QuantumMath.pauliZ);
 
-                    count++;
-                }
-
-                OutputRouter.instance.RequestOutput(OutputRequests.info,msg);
+                OutputRouter.instance.RequestOutput(OutputRequests.info, msg);
             }
             else
             {
                 onpatch = false;
                 nowPatch = null;
             }
+
+            if (Input.GetMouseButtonDown(0))
+            {
+                if (selecteds.ContainsKey(patch))
+                {
+
+                    selecteds[patch] = !selecteds[patch];
+                }
+                else
+                {
+                    selecteds[patch] = true;
+                }
+            }
         }
     }
+
+
 }

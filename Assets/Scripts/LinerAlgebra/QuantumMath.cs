@@ -4,6 +4,7 @@ using System.Numerics;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics;
 using System;
+using System.Linq;
 
 public static class QuantumMath
 {
@@ -19,19 +20,19 @@ public static class QuantumMath
         switch (pauli)
         {
             case Pauli.X:
-            return _pauliX;
+                return _pauliX;
             case Pauli.Y:
-            return _pauliY;
+                return _pauliY;
             case Pauli.Z:
-            return _pauliZ;
+                return _pauliZ;
         }
 
         return null;
     }
 
-    public static Dictionary<Complex, MathNet.Numerics.LinearAlgebra.Vector<Complex>> StateInBase(MathNet.Numerics.LinearAlgebra.Vector<Complex> stateVector, DenseMatrix baseMatrix)
+    public static Dictionary<MathNet.Numerics.LinearAlgebra.Vector<Complex>, Complex> StateInBase(MathNet.Numerics.LinearAlgebra.Vector<Complex> stateVector, DenseMatrix baseMatrix)
     {
-        var result = new Dictionary<Complex, MathNet.Numerics.LinearAlgebra.Vector<Complex>>();
+        var result = new Dictionary<MathNet.Numerics.LinearAlgebra.Vector<Complex>, Complex>();
         var eigenvecs = GetAugVector(baseMatrix);
         var veca = eigenvecs.Row(0);
         var vecb = eigenvecs.Row(1);
@@ -40,8 +41,8 @@ public static class QuantumMath
         var beta = GetProjectScolar(vecb, stateVector);
         //var newVector = alpha*veca + beta*vecb;
 
-        result[alpha] = veca;
-        result[beta] = vecb;
+        result[veca] = alpha;
+        result[vecb] = beta;
 
         return result;
     }
@@ -83,17 +84,120 @@ public static class QuantumMath
 
         return null;
     }
+    public static EntangleResult Measure(QuantumPatch quantumPatchA, QuantumPatch quantumPatchB, List<Edge> baseA, List<Edge> baseB)
+    {
+        if (baseA.Count == 1)
+        {
+            var ba = GetPauliGate((baseA[0].property as QuantumEdgeProperty).operatorType);
+            var bb = GetPauliGate((baseB[0].property as QuantumEdgeProperty).operatorType);
+            return Measure(quantumPatchA, quantumPatchB, ba, bb);
+        }
+
+        throw new NotImplementedException();
+    }
+
+    public static EntangleResult Measure(QuantumPatch quantumPatchA, QuantumPatch quantumPatchB, DenseMatrix baseA, DenseMatrix baseB)
+    {
+        Dictionary<MathNet.Numerics.LinearAlgebra.Vector<Complex>, Complex> stateA = quantumPatchA.StateInBase(baseA);
+        Dictionary<MathNet.Numerics.LinearAlgebra.Vector<Complex>, Complex> stateB = quantumPatchB.StateInBase(baseB);
+        Dictionary<string, Complex> tensor = TensorInStr(stateA, stateB, out Dictionary<string, MathNet.Numerics.LinearAlgebra.Vector<System.Numerics.Complex>> ketValueDict);
+        string choise = measureWithState<string>(tensor);
+        var parity = 0;
+
+        if (tensor.ToArray()[0].Key == choise || tensor.ToArray()[3].Key == choise)
+        {
+            parity = 1;
+        }
+        else
+        {
+            parity = -1;
+        }
+        Dictionary<string, Complex> entangled = makeEntangle(tensor, parity);
+
+        return new EntangleResult
+        {
+            parity = parity,
+            tensor = tensor,
+            entangledStateStr = entangled,
+            entangledState = null, //どっかに配列状態のStateを持っておくべき?
+            ketValueDict = ketValueDict
+        };
+    }
+
+    //不明なやつ
+    static Dictionary<T, Complex> makeEntangle<T>(Dictionary<T, Complex> tensor, int parity)
+    {
+        int[] pair = new int[2] { 0, 0 };
+        var tensorArray = tensor.ToArray();
+        var result = new Dictionary<T, Complex>();
+        if (parity == 1)
+        {
+            pair[0] = 0;
+            pair[1] = 3;
+        }
+        else
+        {
+            pair[0] = 1;
+            pair[1] = 2;
+        }
+        var rate = Math.Sqrt(1 / (tensorArray[pair[0]].Value.MagnitudeSquared() + tensorArray[pair[1]].Value.MagnitudeSquared()));
+
+        return new Dictionary<T, Complex>() { { tensorArray[pair[0]].Key, tensorArray[pair[0]].Value * rate }, { tensorArray[pair[1]].Key, tensorArray[pair[1]].Value * rate } };
+    }
+
+    static Dictionary<string, Complex> TensorInStr(Dictionary<MathNet.Numerics.LinearAlgebra.Vector<Complex>, Complex> stateA, Dictionary<MathNet.Numerics.LinearAlgebra.Vector<Complex>, Complex> stateB, out Dictionary<string, MathNet.Numerics.LinearAlgebra.Vector<Complex>> ketValueDict)
+    {
+        var alphabet = "abcdefghijklmnopqrstuvwxyz";
+        var count = 0;
+        Func<char> gnc = () =>
+        {
+            var a = alphabet[count];
+            count++;
+            return a;
+        };
+        var result = new Dictionary<string, Complex>();
+        Dictionary<string, MathNet.Numerics.LinearAlgebra.Vector<Complex>> ket_value_dict = new Dictionary<string, MathNet.Numerics.LinearAlgebra.Vector<Complex>>();
+        foreach (var a in stateA)
+        {
+            foreach (var b in stateB)
+            {
+                var labelA = "|" + gnc + ">";
+                var labelB = "|" + gnc + ">";
+                ket_value_dict[labelA] = a.Key;
+                ket_value_dict[labelB] = b.Key;
+                result[GetStateKet(stateVector: a.Key, labelA) + GetStateKet(b.Key, labelB)] = a.Value * b.Value;
+
+            }
+        }
+        ketValueDict = ket_value_dict;
+        return result;
+    }
+
+    static Dictionary<Complex, MathNet.Numerics.LinearAlgebra.Vector<Complex>> TensorInVal()
+    {
+        throw new NotImplementedException();
+    }
 
     public static MeasurementResult Measure(QuantumPatch quantumPatch, DenseMatrix baseMatrix)
     {
-        Dictionary<Complex, MathNet.Numerics.LinearAlgebra.Vector<Complex>> state = quantumPatch.StateInBase(baseMatrix);
+        Dictionary<MathNet.Numerics.LinearAlgebra.Vector<Complex>, Complex> state = quantumPatch.StateInBase(baseMatrix);
         Dictionary<MathNet.Numerics.LinearAlgebra.Vector<Complex>, double> rateDict = new Dictionary<MathNet.Numerics.LinearAlgebra.Vector<Complex>, double>();
         foreach (var headAndVector in state)
         {
-            var p = headAndVector.Key.Magnitude * headAndVector.Key.Magnitude;
-            rateDict[headAndVector.Value] = p;
+            var p = headAndVector.Value.MagnitudeSquared();
+            rateDict[headAndVector.Key] = p;
         }
 
+        var key = measureWithRate<MathNet.Numerics.LinearAlgebra.Vector<Complex>>(rateDict);
+        var ket = GetStateKet(key, "|a>");
+        return new MeasurementResult(rateDict, key, ket, baseMatrix);
+
+
+        throw new Exception("Deporlalized Error");
+    }
+
+    static T measureWithRate<T>(Dictionary<T, double> rateDict)
+    {
         var rand = (double)UnityEngine.Random.value;
 
         double nowrate = 0;
@@ -103,12 +207,29 @@ public static class QuantumMath
 
             if (rand < nowrate)
             {
-                var ket = GetStateKet(rate.Key, "|a>");
-                return new MeasurementResult(rateDict, rate.Key, ket, baseMatrix);
+                return rate.Key;
             }
         }
 
-        throw new Exception("Deporlalized Error");
+        throw new Exception("something went wrong");
+    }
+
+    static T measureWithState<T>(Dictionary<T, Complex> rateDict)
+    {
+        var rand = (double)UnityEngine.Random.value;
+
+        double nowrate = 0;
+        foreach (var rate in rateDict)
+        {
+            nowrate += rate.Value.Magnitude * rate.Value.Magnitude;
+
+            if (rand < nowrate)
+            {
+                return rate.Key;
+            }
+        }
+
+        throw new Exception("something went wrong");
     }
 
     public static string GetStateKet(MathNet.Numerics.LinearAlgebra.Vector<Complex> stateVector, string def)
@@ -135,6 +256,42 @@ public static class QuantumMath
 
     public static string ComplexToStr(Complex complex)
     {
-        return complex.Real + complex.Imaginary == 0? (complex.Imaginary > 0 ? " + ":" ") + complex.Imaginary + "i":"";
+        return complex.Real + complex.Imaginary == 0 ? (complex.Imaginary > 0 ? " + " : " ") + complex.Imaginary + "i" : "";
+    }
+
+    public static string DataToStr<T>(Dictionary<T, Complex> data)
+    {
+        var msg = "";
+        var count = 0;
+        foreach (var cv in data)
+        {
+            if (count == 0)
+            {
+                msg += (cv.Value.Real != 0 ? replaceF(cv.Value.Real) : "" + (cv.Value.Imaginary > 0 ? " + " : " ")) + (cv.Value.Imaginary != 0 ? replaceF(cv.Value.Imaginary) : "") + (cv.Value.Magnitude > 0 ? (cv.Key is MathNet.Numerics.LinearAlgebra.Vector<Complex> cvkey ? QuantumMath.GetStateKet(stateVector: cvkey, "|a>") : cv.Key) : "");
+            }
+            else
+            {
+                msg += (cv.Value.Real != 0 ? (cv.Value.Real > 0 ? " + " : " ") + replaceF(cv.Value.Real) : " ") + (cv.Value.Imaginary != 0 ? (cv.Value.Imaginary < 0 ? " + " : " ") + replaceF(cv.Value.Imaginary) : "") + (cv.Value.Magnitude != 0 ? (cv.Key is MathNet.Numerics.LinearAlgebra.Vector<Complex> cvkey ? QuantumMath.GetStateKet(stateVector: cvkey, "|a>") : cv.Key) : "");
+            }
+
+            count++;
+        }
+        return msg;
+    }
+
+    static float root2bunnoichi = 0.707106781186547f;
+    public static string replaceF(double num)
+    {
+        var result = num.ToString();
+        if (Math.Abs((float)num) == root2bunnoichi)
+        {
+            result = "1/√2";
+            if (num < 0)
+            {
+                result = "-" + result;
+            }
+        }
+
+        return result;
     }
 }

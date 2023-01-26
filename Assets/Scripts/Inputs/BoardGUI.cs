@@ -151,20 +151,22 @@ public class BoardGUI : MonoBehaviour
         {
             for (int y = 0; y < BoardManager.instance.nowBoard.extent.y; y++)
             {
-                var cord = new Vector3(x, y, 0);
+                var cord = new Vector3(x, y, 1);
                 var cell = BoardManager.instance.nowBoard.GetCell(cord);
 
+                var depth = 4;
                 if (cell == null)
                 {
+                    cord.z = depth;
+                    board.SetTile(Vector3Int.FloorToInt(cord),null); 
                     continue;
                 }
 
-                var depth = 4;
                 foreach (int direction in Enum.GetValues(typeof(Direction)))
                 {
                     cord.z = depth;
                     var property = cell.edges[direction].property as QuantumEdgeProperty;
-                    if (property.operatorName == "X")
+                    if (property.operatorType == Pauli.X)
                     {
                         var edgeTile = EdgeTile.GetTile((Direction)direction);
                         board.SetTile(Vector3Int.FloorToInt(cord), edgeTile);

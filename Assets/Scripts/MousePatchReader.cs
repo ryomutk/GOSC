@@ -36,6 +36,7 @@ public class MousePatchReader : InputRequestHandlerComponent
         {
             processingTask.SetCompleate();
             processingTask = null;
+            selecteds = new Dictionary<QuantumPatch, bool>();
         }
     }
 

@@ -87,7 +87,7 @@ public class QuantumPatch : Patch
             foreach (int direction in Enum.GetValues(typeof(Direction)))
             {
                 var edge = cell.Value.edges[direction];
-                msg += "    " + (Direction)direction + (edge.property as QuantumEdgeProperty).operatorName + "<br>";
+                msg += "    " + (Direction)direction + (edge.property as QuantumEdgeProperty).operatorType + "<br>";
             }
         }
 
@@ -103,34 +103,20 @@ public class QuantumPatch : Patch
         {
             if (count == 0)
             {
-                msg += (cv.Key.Real != 0 ? replaceF(cv.Key.Real) : "" + (cv.Key.Imaginary > 0 ? " + " : " ")) + (cv.Key.Imaginary != 0 ? replaceF(cv.Key.Imaginary) : "") + (cv.Key.Magnitude > 0 ? QuantumMath.GetStateKet(stateVector: cv.Value, "|a>") : "");
+                msg += (cv.Value.Real != 0 ? QuantumMath.replaceF(cv.Value.Real) : "" + (cv.Value.Imaginary > 0 ? " + " : " ")) + (cv.Value.Imaginary != 0 ? QuantumMath.replaceF(cv.Value.Imaginary) : "") + (cv.Value.Magnitude > 0 ? QuantumMath.GetStateKet(stateVector: cv.Key, "|a>") : "");
             }
             else
             {
-                msg += (cv.Key.Real != 0 ? (cv.Key.Real > 0 ? " + " : " ") + replaceF(cv.Key.Real) : " ") + (cv.Key.Imaginary != 0?(cv.Key.Imaginary < 0 ? " + " : " ") +replaceF(cv.Key.Imaginary) : "") + (cv.Key.Magnitude != 0 ? QuantumMath.GetStateKet(stateVector: cv.Value, "|a>") : "");
+                msg += (cv.Value.Real != 0 ? (cv.Value.Real > 0 ? " + " : " ") + QuantumMath.replaceF(cv.Value.Real) : " ") + (cv.Value.Imaginary != 0?(cv.Value.Imaginary < 0 ? " + " : " ") +QuantumMath.replaceF(cv.Value.Imaginary) : "") + (cv.Value.Magnitude != 0 ? QuantumMath.GetStateKet(stateVector: cv.Key, "|a>") : "");
             }
 
             count++;
         }
         return msg;
     }
-    static float root2bunnoichi = 0.707106781186547f;
-    string replaceF(double num)
-    {
-        var result = num.ToString();
-        if (Mathf.Abs((float)num) == root2bunnoichi)
-        {
-            result = "1/√2";
-            if (num < 0)
-            {
-                result = "-" + result;
-            }
-        }
 
-        return result;
-    }
 
-    public Dictionary<Complex,MathNet.Numerics.LinearAlgebra.Vector<Complex>> StateInBase(DenseMatrix baseMatrix)
+    public Dictionary<MathNet.Numerics.LinearAlgebra.Vector<Complex>,Complex> StateInBase(DenseMatrix baseMatrix)
     {
         return QuantumMath.StateInBase(this.state.stateVector, baseMatrix);
     }

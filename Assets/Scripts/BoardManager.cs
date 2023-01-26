@@ -91,6 +91,12 @@ public class BoardManager : Singleton<BoardManager>
                 case BoardActions.extendPatch:
                     throw new NotImplementedException();
                 case BoardActions.measurePatch:
+                    if(nowBoard.patchMap.Count == 0)
+                    {
+                        OutputRouter.instance.RequestOutput(OutputRequests.info,"Please place at least one patch");
+                        break;
+                    }
+
                     yield return StartCoroutine(MeasureLoop());
                     break;
             }
@@ -106,8 +112,8 @@ public class BoardManager : Singleton<BoardManager>
 
         while (!measureRequest.compleate)
         {
-            yield return new WaitUntil(()=>measureRequest.result!=null);
-            
+            yield return new WaitUntil(() => measureRequest.result != null);
+
             state = SessionState.patchMeasure;
             var last = measureRequest.result as Dictionary<QuantumPatch, bool>;
 
@@ -118,25 +124,34 @@ public class BoardManager : Singleton<BoardManager>
             board.RemapSelected();
         }
 
-        var selecteds =( measureRequest.result as Dictionary<QuantumPatch, bool>).Where(x => x.Value).Select(x=>x.Key).ToArray();
+        var selecteds = (measureRequest.result as Dictionary<QuantumPatch, bool>).Where(x => x.Value).Select(x => x.Key).ToArray();
         if (selecteds.Length == 1)
         {
             Pauli selected = pauliMode;
             var result = QuantumMath.Measure(selecteds[0], selected == Pauli.X ? QuantumMath.pauliX : QuantumMath.pauliZ);
-            OutputRouter.instance.RequestOutput(OutputRequests.info,result.infoMsg);
+            nowBoard.RemovePatch(selecteds[0]);
+            OutputRouter.instance.RequestOutput(OutputRequests.info, result.infoMsg);
         }
         else if (selecteds.Length == 2)
         {
-
+            var ifTangent = nowBoard.GetTangentEdges(selecteds[0], selecteds[1]);
+            if (ifTangent.Count() == 2)
+            {
+                EntangleResult result = QuantumMath.Measure(selecteds[0], selecteds[1], ifTangent[selecteds[0]], ifTangent[selecteds[1]]);
+                OutputRouter.instance.RequestOutput(OutputRequests.info, result.info);
+            }
         }
         else if (selecteds.Length > 2)
         {
-            throw new NotImplementedException();
+            OutputRouter.instance.RequestOutput(OutputRequests.info, "Please select one || two patches next to each other");
         }
         else
         {
 
         }
+
+        nowBoard.DeselectAll();
+        board.RemapPatch();
 
         state = SessionState.actionSelect;
     }
@@ -173,6 +188,10 @@ public class BoardManager : Singleton<BoardManager>
 
             count = patchPlace.intervalCount;
             var nowCoord = (Vector2)patchPlace.result;
+            nowCoord.x = Mathf.Clamp(nowCoord.x, 0,nowBoard.extent.x);
+            nowCoord.y = Mathf.Clamp(nowCoord.y, 0,nowBoard.extent.y);
+
+
             board.DrawPatchGhost(BoardManager.instance.prepairedPatch, Vector2Int.RoundToInt(nowCoord));
         }
         board.RemapPatch();

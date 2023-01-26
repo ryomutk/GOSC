@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class QuantumEdgeProperty:EdgeProperty
 {
-	public string operatorName;
+	public Pauli operatorType;
 	public Edge[] members;
 	public int length { get { return members.Length; } }
 
@@ -15,7 +15,7 @@ public class QuantumEdgeProperty:EdgeProperty
 
 	public QuantumEdgeProperty(string gate,bool oqqupied)
 	{
-		this.operatorName = gate;
+		this.operatorType = gate=="X"?Pauli.X:Pauli.Z;
 		this.oqqupied = oqqupied;
 	}
 

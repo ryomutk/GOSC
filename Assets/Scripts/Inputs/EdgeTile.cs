@@ -13,7 +13,7 @@ public class EdgeTile : Tile
     [ShowInInspector] static Dictionary<Direction, EdgeTile> tileDict = new Dictionary<Direction, EdgeTile>();
     [SerializeField] Direction direction;
 
-    private void OnValidate()
+    public void load()
     {
         while (tileDict.Any(x => x.Value == this))
         {

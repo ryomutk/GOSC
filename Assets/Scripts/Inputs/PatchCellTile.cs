@@ -16,7 +16,7 @@ public class PatchCellTile : Tile
     [SerializeField] int ghostLayer = 2;
     [SerializeField] Color ghostColor = Color.red;
 
-    private void OnValidate()
+    public void load()
     {
         while (tileDict.Any(x => x.Value == this))
         {

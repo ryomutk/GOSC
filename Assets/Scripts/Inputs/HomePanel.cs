@@ -7,6 +7,7 @@ public class HomePanel:InputRequestHandlerComponent
     [SerializeField] Button patchSelectButton;
     [SerializeField] Button newBoardButton;
     [SerializeField] Button mesureButton;
+    [SerializeField] Button deformButton;
     List<Task> waitingTasks = new List<Task>();
 
     void Start()
@@ -14,6 +15,7 @@ public class HomePanel:InputRequestHandlerComponent
         patchSelectButton.onClick.AddListener(()=>ButtonPush(BoardActions.placePatch));
         newBoardButton.onClick.AddListener(()=>ButtonPush(BoardActions.startNew));
         mesureButton.onClick.AddListener(()=>ButtonPush(BoardActions.measurePatch));
+        deformButton.onClick.AddListener(()=>ButtonPush(BoardActions.extendPatch));
         InputRouter.instance.Register(this,InputRequests.actionSelect);
     }
 

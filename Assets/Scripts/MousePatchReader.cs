@@ -13,6 +13,8 @@ public class MousePatchReader : InputRequestHandlerComponent
     bool onpatch = false;
     Task processingTask = null;
     Dictionary<QuantumPatch, bool> selecteds = new Dictionary<QuantumPatch, bool>();
+    Dictionary<Vector2Int, bool> selectedCoords = new Dictionary<Vector2Int, bool>();
+    SelectMode selectMode = 0;
 
 
 
@@ -20,11 +22,21 @@ public class MousePatchReader : InputRequestHandlerComponent
     {
         boardGUI = GetComponent<BoardGUI>();
         InputRouter.instance.Register(this, InputRequests.selectMeasurePatch);
+        InputRouter.instance.Register(this, InputRequests.reformPatch);
         SubmitButton.instance.entity.onClick.AddListener(() => SubmitInput());
     }
 
     public override Task RequestInput()
     {
+        if (BoardManager.instance.state == SessionState.patchReform)
+        {
+            selectMode = SelectMode.cell;
+        }
+        else
+        {
+            selectMode = SelectMode.patch;
+        }
+
         processingTask = new Task();
 
         return processingTask;
@@ -37,6 +49,7 @@ public class MousePatchReader : InputRequestHandlerComponent
             processingTask.SetCompleate();
             processingTask = null;
             selecteds = new Dictionary<QuantumPatch, bool>();
+            selectedCoords = new Dictionary<Vector2Int, bool>();
         }
     }
 
@@ -50,7 +63,7 @@ public class MousePatchReader : InputRequestHandlerComponent
             {
                 nowPatch = patch;
                 //OutputRouter.instance.RequestOutput(OutputRequests.info, patch.GetInfo());
-                var msg = patch.getStateInfo(QuantumMath.pauliZ);
+                var msg = patch.getStateInfo(QuantumMath.GetPauliGate(BoardManager.instance.pauliMode));
 
                 OutputRouter.instance.RequestOutput(OutputRequests.info, msg);
             }
@@ -60,20 +73,44 @@ public class MousePatchReader : InputRequestHandlerComponent
                 nowPatch = null;
             }
 
-            if (processingTask!=null&&Input.GetMouseButtonDown(0))
+            if (processingTask != null && Input.GetMouseButtonDown(0))
             {
-                if (selecteds.ContainsKey(patch))
+                if (selectMode == SelectMode.patch)
                 {
+                    if (selecteds.ContainsKey(patch))
+                    {
 
-                    selecteds[patch] = !selecteds[patch];
+                        selecteds[patch] = !selecteds[patch];
+                    }
+                    else
+                    {
+                        selecteds[patch] = true;
+                    }
+                    processingTask.SetResult(selecteds);
+
                 }
-                else
-                {
-                    selecteds[patch] = true;
-                }
-                processingTask.SetResult(selecteds);
             }
         }
+
+        if (selectMode==SelectMode.cell&&processingTask != null && Input.GetMouseButtonDown(0))
+        {
+            if (coord.x >= BoardManager.instance.nowBoard.extent.x ||coord.y >= BoardManager.instance.nowBoard.extent.y)
+            {
+                return;
+            }
+
+            if (selectedCoords.ContainsKey((Vector2Int)coord))
+            {
+                selectedCoords[(Vector2Int)coord] = !selectedCoords[(Vector2Int)coord];
+            }
+            else
+            {
+                selectedCoords[(Vector2Int)coord] = true;
+            }
+
+            processingTask.SetResult(selectedCoords);
+        }
+
     }
 
 

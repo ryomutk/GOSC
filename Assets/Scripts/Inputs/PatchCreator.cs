@@ -5,15 +5,15 @@ using MathNet.Numerics.LinearAlgebra.Complex;
 public class PatchCreator : InputRequestHandlerComponent
 {
     [SerializeField] Vector2[] coords;
-    [SerializeField] SerializableDictionary<Vector2, Direction[]> edges;
-    [SerializeField] SerializableDictionary<Button,InitializeType> buttonDict;
+    [SerializeField] SerializableDictionary<Button, InitializeType> buttonDict;
+    [SerializeField] EdgeSelector edgeSelector;
     CanvasGroup canvasGroup;
     Task workingTask = Task.NULL_TASK;
     QuantumPatch nowPatch = null;
 
     void Start()
     {
-        foreach(var buttonType in buttonDict)
+        foreach (var buttonType in buttonDict)
         {
             buttonType.Key.onClick.AddListener(() => SubmitInput(buttonType.Value));
         }
@@ -21,7 +21,7 @@ public class PatchCreator : InputRequestHandlerComponent
         canvasGroup.interactable = false;
         canvasGroup.blocksRaycasts = false;
         canvasGroup.alpha = 0;
-        InputRouter.instance.Register(this,InputRequests.patch);
+        InputRouter.instance.Register(this, InputRequests.patch);
     }
 
     public override Task RequestInput()
@@ -32,7 +32,7 @@ public class PatchCreator : InputRequestHandlerComponent
         workingTask = new Task();
         return workingTask;
     }
-      
+
 
     void SubmitInput(InitializeType arg)
     {
@@ -42,22 +42,33 @@ public class PatchCreator : InputRequestHandlerComponent
             canvasGroup.interactable = false;
             canvasGroup.blocksRaycasts = false;
             Pauli initialBase = 0;
-            if(arg == InitializeType.single0)
+            bool inv = false;
+            if (arg == InitializeType.single0)
             {
-                initialBase =  Pauli.Z;
+                initialBase = Pauli.Z;
             }
-            else if(arg == InitializeType.singleP)
+            else if (arg == InitializeType.singleP)
             {
                 initialBase = Pauli.X;
             }
-            else
+            else if (arg == InitializeType.single0Inv)
             {
-                workingTask.SetResult(null);
-                workingTask.SetCompleate();
-                return;
+                inv = true;
+                initialBase = Pauli.Z;
+            }
+            else if (arg == InitializeType.singlePInv)
+            {
+                inv = true;
+                initialBase = Pauli.X;
             }
 
-            workingTask.SetResult(new QuantumPatch(coords, edges.GetDictionary(),initialBase));
+
+            var edges = new Dictionary<Vector2, Direction[]>();
+            foreach (var cord in coords)
+            {
+                edges[cord] = edgeSelector.GetSmooths();
+            }
+            workingTask.SetResult(new QuantumPatch(coords, edges, initialBase));
             workingTask.SetCompleate();
         }
     }

@@ -11,7 +11,8 @@ public class QuantumState
     
     public QuantumState(Pauli eigenBase)
     {
-        this.stateVector = QuantumMath.GetAugVector(eigenBase).Row(1);    
+        this.stateVector = QuantumMath.GetAugVector(eigenBase).Row(0);    
+        Debug.Log(stateVector);
     }
 
     public QuantumState(MathNet.Numerics.LinearAlgebra.Vector<Complex> stateVector)

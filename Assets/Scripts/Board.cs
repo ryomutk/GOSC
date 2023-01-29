@@ -14,6 +14,33 @@ public class Board
     public Dictionary<Patch, Vector2Int> patchMap { get { return _patchMap; } }
     public bool[,] selected { get; private set; }
 
+    /// <summary>
+    /// ターゲット座標の周りに接しているパッチを追加。
+    /// ターゲット座標にあるパッチは除外
+    /// </summary>
+    /// <param name="coord"></param>
+    /// <returns>方向:パッチのDict</returns>
+    public Dictionary<Direction, Patch> GetTangentPatch(Vector2 coord)
+    {
+        var results = new Dictionary<Direction, Patch>();
+        var self = Get(coord);
+        foreach (Direction direction in Enum.GetValues(typeof(Direction)))
+        {
+            var target = coord + DirectionConv.dirToVec(direction);
+            var p = Get(target);
+            if (p != self)
+            {
+                results[direction] = p;
+            }
+            else
+            {
+                results[direction] = null;
+            }
+        }
+
+        return results;
+    }
+
     public Dictionary<Patch, List<Edge>> GetTangentEdges(Patch a, Patch b)
     {
         Dictionary<Patch, List<Edge>> results = new Dictionary<Patch, List<Edge>>();
@@ -60,8 +87,13 @@ public class Board
         var origin = patchMap[target];
         foreach (Vector2 pos in target.cellMap.Keys)
         {
-            selected[origin.x + (int)pos.x, origin.y + (int)pos.y] = !off;
+            CellSelect(origin.x + (int)pos.x,origin.y + (int)pos.y,off);
         }
+    }
+
+    public void CellSelect(int x,int y, bool off = false)
+    {
+        selected[x, y] = !off;
     }
 
     public void DeselectAll()
@@ -111,12 +143,12 @@ public class Board
     public bool RemovePatch(Patch patch)
     {
         var origin = patchMap[patch];
-        if(_patchMap.Remove(patch))
+        if (_patchMap.Remove(patch))
         {
-            foreach(var local in patch.cellMap.Keys)
+            foreach (var local in patch.cellMap.Keys)
             {
-                var coord = origin+Vector2Int.FloorToInt(local);
-                board[coord.x,coord.y] = null;
+                var coord = origin + Vector2Int.FloorToInt(local);
+                board[coord.x, coord.y] = null;
             }
         }
         return _patchMap.Remove(patch);

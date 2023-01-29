@@ -2,7 +2,7 @@ public enum InitializeType
 {
     single0,
     singleP,
-    double0,
-    doublep,
+    single0Inv,
+    singlePInv,
     custom
 }

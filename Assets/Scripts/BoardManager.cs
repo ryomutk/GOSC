@@ -12,6 +12,7 @@ public class BoardManager : Singleton<BoardManager>
     public SessionState state { get; private set; }
     [SerializeField] BoardGUI board;
     [SerializeField] SerializableDictionary<Pauli, Button> baseSelectors;
+    [SerializeField] EdgeSelector edgeSelector;
     Pauli _pauliMode = Pauli.X;
     public Pauli pauliMode { get { return _pauliMode; } }
 
@@ -89,11 +90,12 @@ public class BoardManager : Singleton<BoardManager>
                     yield return StartCoroutine(PlaceLoop());
                     break;
                 case BoardActions.extendPatch:
-                    throw new NotImplementedException();
+                    yield return StartCoroutine(ExtendCoroutine());
+                    break;
                 case BoardActions.measurePatch:
-                    if(nowBoard.patchMap.Count == 0)
+                    if (nowBoard.patchMap.Count == 0)
                     {
-                        OutputRouter.instance.RequestOutput(OutputRequests.info,"Please place at least one patch");
+                        OutputRouter.instance.RequestOutput(OutputRequests.info, "Please place at least one patch");
                         break;
                     }
 
@@ -103,6 +105,67 @@ public class BoardManager : Singleton<BoardManager>
 
         }
 
+    }
+
+    IEnumerator ExtendCoroutine()
+    {
+        state = SessionState.patchReform;
+        var extendTask = InputRouter.instance.RequestInput(InputRequests.reformPatch);
+        QuantumPatch patch = null;
+        while (!extendTask.compleate)
+        {
+            OutputRouter.instance.RequestOutput(OutputRequests.info, "Select Patch to Extend");
+            yield return new WaitUntil(() => extendTask.result != null && ((Dictionary<Vector2Int, bool>)extendTask.result).Count != 0);
+            var last = extendTask.result as Dictionary<Vector2Int, bool>;
+            patch = nowBoard.Get(last.ToArray()[0].Key) as QuantumPatch;
+            if (patch == null)
+            {
+                OutputRouter.instance.RequestOutput(OutputRequests.info, "Select Patch First");
+                last.Clear();
+                continue;
+            }
+            else
+            {
+                nowBoard.CellSelect(last.ToArray()[0].Key.x, last.ToArray()[0].Key.y);
+                board.RemapSelected();
+                last.Clear();
+                while (!extendTask.compleate)
+                {
+                    state = SessionState.reformSubmit;
+                    OutputRouter.instance.RequestOutput(OutputRequests.info, "Select Cells to Extend into");
+                    yield return new WaitUntil(() => extendTask.result != null || ((Dictionary<Vector2Int, bool>)extendTask.result).Count == 0);
+                    last = extendTask.result as Dictionary<Vector2Int, bool>;
+
+                    foreach (var cellBool in last)
+                    {
+                        nowBoard.CellSelect(cellBool.Key.x, cellBool.Key.y, !cellBool.Value);
+                    }
+                    board.RemapSelected();
+                }
+            }
+        }
+
+        var selecteds = (extendTask.result as Dictionary<Vector2Int, bool>).Where(x => x.Value).Select(x => (Vector2)x.Key).ToArray();
+        var lastCord = nowBoard.patchMap[patch];
+        var lastCellMap = patch.cellMap.Keys.ToArray();
+        nowBoard.RemovePatch(patch);
+
+        selecteds = Array.ConvertAll(selecteds, (x) => x - lastCord);
+        var newCellMap = lastCellMap.Union(selecteds).ToArray();
+        var edges = new Dictionary<Vector2, Direction[]>();
+        foreach (var cord in selecteds)
+        {
+            edges[cord] = edgeSelector.GetSmooths();
+        }
+        foreach (var cord in lastCellMap)
+        {
+            edges[cord] = patch.cellMap[cord].edges.Select((x,i)=>(Direction)i).ToArray();
+        }
+        nowBoard.Register(lastCord, new QuantumPatch(newCellMap, edges, patch.state.stateVector));
+
+        nowBoard.DeselectAll();
+        board.RemapPatch();
+        state = SessionState.actionSelect;
     }
 
     IEnumerator MeasureLoop()
@@ -188,8 +251,8 @@ public class BoardManager : Singleton<BoardManager>
 
             count = patchPlace.intervalCount;
             var nowCoord = (Vector2)patchPlace.result;
-            nowCoord.x = Mathf.Clamp(nowCoord.x, 0,nowBoard.extent.x);
-            nowCoord.y = Mathf.Clamp(nowCoord.y, 0,nowBoard.extent.y);
+            nowCoord.x = Mathf.Clamp(nowCoord.x, 0, nowBoard.extent.x);
+            nowCoord.y = Mathf.Clamp(nowCoord.y, 0, nowBoard.extent.y);
 
 
             board.DrawPatchGhost(BoardManager.instance.prepairedPatch, Vector2Int.RoundToInt(nowCoord));

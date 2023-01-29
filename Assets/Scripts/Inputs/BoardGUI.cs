@@ -154,7 +154,7 @@ public class BoardGUI : MonoBehaviour
                 var cord = new Vector3(x, y, 1);
                 var cell = BoardManager.instance.nowBoard.GetCell(cord);
 
-                var depth = 4;
+                var depth = 10;
                 if (cell == null)
                 {
                     cord.z = depth;

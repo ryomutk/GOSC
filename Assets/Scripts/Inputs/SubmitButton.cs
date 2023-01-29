@@ -57,6 +57,20 @@ public class SubmitButton : Singleton<SubmitButton>
                     text.text = "Place";
                 }
                 break;
+            case SessionState.patchReform:
+                if (text.text != "Select Patch")
+                {
+                    entity.interactable = false;
+                    text.text = "Select Patch";
+                }
+                break;
+            case SessionState.reformSubmit:
+                if (text.text != "Deform")
+                {
+                    entity.interactable = true;
+                    text.text = "Deform";
+                }
+                break;
         }
     }
 }

@@ -10,7 +10,8 @@ using System.Numerics;
 public class QuantumPatch : Patch
 {
     int numQubit = 1;
-    QuantumState state;
+    public QuantumState state { get; private set; }
+
 
     public QuantumPatch(UnityEngine.Vector2[] coords, Dictionary<UnityEngine.Vector2, Direction[]> smoothEdges, MathNet.Numerics.LinearAlgebra.Vector<Complex> initialState) : base(coords)
     {
@@ -38,13 +39,18 @@ public class QuantumPatch : Patch
 
     public QuantumPatch(UnityEngine.Vector2[] coords, Dictionary<UnityEngine.Vector2, Direction[]> smoothEdges, Pauli eigenBase) : base(coords)
     {
-        var vecs = new UnityEngine.Vector2[4] { UnityEngine.Vector2.up, UnityEngine.Vector2.right, UnityEngine.Vector2.down, UnityEngine.Vector2.left };
         state = new QuantumState(eigenBase);
+        SetEdges(smoothEdges);
+    }
+
+    public void SetEdges(Dictionary<UnityEngine.Vector2, Direction[]> smoothEdges)
+    {
+        var vecs = new UnityEngine.Vector2[4] { UnityEngine.Vector2.up, UnityEngine.Vector2.right, UnityEngine.Vector2.down, UnityEngine.Vector2.left };
         foreach (var coordDirection in smoothEdges)
         {
             foreach (Direction direction in Enum.GetValues(typeof(Direction)))
             {
-                if (coords.Contains(vecs[(int)direction] + coordDirection.Key))
+                if (base.cellMap.Keys.Contains(vecs[(int)direction] + coordDirection.Key))
                 {
                     SetEdgeGate(coordDirection.Key, direction, new QuantumEdgeProperty("", true));
                 }
@@ -107,7 +113,7 @@ public class QuantumPatch : Patch
             }
             else
             {
-                msg += (cv.Value.Real != 0 ? (cv.Value.Real > 0 ? " + " : " ") + QuantumMath.replaceF(cv.Value.Real) : " ") + (cv.Value.Imaginary != 0?(cv.Value.Imaginary < 0 ? " + " : " ") +QuantumMath.replaceF(cv.Value.Imaginary) : "") + (cv.Value.Magnitude != 0 ? QuantumMath.GetStateKet(stateVector: cv.Key, "|a>") : "");
+                msg += (cv.Value.Real != 0 ? (cv.Value.Real > 0 ? " + " : " ") + QuantumMath.replaceF(cv.Value.Real) : " ") + (cv.Value.Imaginary != 0 ? (cv.Value.Imaginary < 0 ? " + " : " ") + QuantumMath.replaceF(cv.Value.Imaginary) : "") + (cv.Value.Magnitude != 0 ? QuantumMath.GetStateKet(stateVector: cv.Key, "|a>") : "");
             }
 
             count++;
@@ -116,7 +122,7 @@ public class QuantumPatch : Patch
     }
 
 
-    public Dictionary<MathNet.Numerics.LinearAlgebra.Vector<Complex>,Complex> StateInBase(DenseMatrix baseMatrix)
+    public Dictionary<MathNet.Numerics.LinearAlgebra.Vector<Complex>, Complex> StateInBase(DenseMatrix baseMatrix)
     {
         return QuantumMath.StateInBase(this.state.stateVector, baseMatrix);
     }

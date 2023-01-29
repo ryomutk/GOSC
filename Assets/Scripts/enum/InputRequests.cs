@@ -5,5 +5,6 @@ public enum InputRequests
     patchPlace,
     newBoard,
     actionSelect,
-    selectMeasurePatch
+    selectMeasurePatch,
+    reformPatch
 }

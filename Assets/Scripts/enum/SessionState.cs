@@ -5,5 +5,7 @@
         actionSelect,        //アクション選択待ち
         patchInput,     //パッチ入力待ち
         patchPlace,      //パッチ置き待ち
-        patchMeasure
+        patchMeasure,
+        patchReform,
+        reformSubmit
     }

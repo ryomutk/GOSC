@@ -63,6 +63,7 @@ public static class QuantumMath
     public static Matrix<Complex> GetAugVector(DenseMatrix baseMatrix)
     {
         var result = baseMatrix.Evd().EigenVectors;
+
         return result;
     }
 
@@ -75,7 +76,7 @@ public static class QuantumMath
         }
         if (pauli == Pauli.Z)
         {
-            return GetAugVector(pauliZ);
+            return GetAugVector(baseMatrix: pauliZ);
         }
         if (pauli == Pauli.Y)
         {
@@ -86,15 +87,28 @@ public static class QuantumMath
     }
     public static EntangleResult Measure(QuantumPatch quantumPatchA, QuantumPatch quantumPatchB, List<Edge> baseA, List<Edge> baseB)
     {
-        if (baseA.Count == 1)
-        {
-            var ba = GetPauliGate((baseA[0].property as QuantumEdgeProperty).operatorType);
-            var bb = GetPauliGate((baseB[0].property as QuantumEdgeProperty).operatorType);
-            return Measure(quantumPatchA, quantumPatchB, ba, bb);
-        }
 
-        throw new NotImplementedException();
+        var ba = GetPauliGate((baseA[0].property as QuantumEdgeProperty).operatorType);
+        for (int i = 1; i < baseA.Count; i++)
+        {
+            if (i == 0)
+            {
+                ba.Multiply(GetPauliGate((baseA[i].property as QuantumEdgeProperty).operatorType));
+            }
+        }
+        var bb = GetPauliGate((baseB[0].property as QuantumEdgeProperty).operatorType);
+        for (int i = 1; i < baseB.Count; i++)
+        {
+            if (i == 0)
+            {
+                bb.Multiply(GetPauliGate((baseB[i].property as QuantumEdgeProperty).operatorType));
+            }
+        }
+        return Measure(quantumPatchA, quantumPatchB, ba, bb);
+
+
     }
+
 
     public static EntangleResult Measure(QuantumPatch quantumPatchA, QuantumPatch quantumPatchB, DenseMatrix baseA, DenseMatrix baseB)
     {
@@ -234,11 +248,11 @@ public static class QuantumMath
 
     public static string GetStateKet(MathNet.Numerics.LinearAlgebra.Vector<Complex> stateVector, string def)
     {
-        if (GetAugVector(Pauli.Z).Row(0).Equals(stateVector))
+        if (GetAugVector(Pauli.Z).Row(1).Equals(stateVector))
         {
             return "|1>";
         }
-        else if (GetAugVector(Pauli.Z).Row(1).Equals(stateVector))
+        else if (GetAugVector(Pauli.Z).Row(0).Equals(stateVector))
         {
             return "|0>";
         }
